@@ -2,9 +2,11 @@ plugins {
     id "java-library"
 }
 
+group = "com.example"
+version = "0.0.0"
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
 }
-

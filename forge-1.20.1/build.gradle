@@ -128,7 +128,7 @@ minecraft {
  */
 sourceSets.main.resources {
     srcDir "src/generated/resources"
-    srcDir project(":common").file("src/main/resources")
+    srcDir "../common/src/main/resources"
 }
 
 
@@ -139,7 +139,7 @@ dependencies {
      * implementation extends from library, so this is available
      * during compilation as well as through minecraft_classpath above.
      */
-    library project(":common")
+    library "com.example:vitalrelics-common:0.0.0"
 
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
@@ -193,8 +193,7 @@ tasks.named('processResources', ProcessResources).configure {
  * Final mod JAR metadata + Forge reobfuscation.
  */
 tasks.named('jar', Jar).configure {
-    dependsOn project(":common").tasks.named("classes")
-    from(project(":common").sourceSets.main.output)
+    from({ configurations.library.collect { zipTree(it) } })
 
     manifest {
         attributes([

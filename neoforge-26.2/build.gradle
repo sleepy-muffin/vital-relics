@@ -79,7 +79,7 @@ neoForge {
 
 sourceSets.main.resources {
     srcDir "src/generated/resources"
-    srcDir project(":common").file("src/main/resources")
+    srcDir "../common/src/main/resources"
 
     exclude("**/*.bbmodel")
     exclude("src/generated/**/.cache")
@@ -90,7 +90,7 @@ configurations {
 }
 
 dependencies {
-    implementation project(":common")
+    implementation "com.example:vitalrelics-common:0.0.0"
 
     compileOnly "top.theillusivec4.curios:curios-neoforge:${curios_version}:api"
     localRuntime "top.theillusivec4.curios:curios-neoforge:${curios_version}"
@@ -152,8 +152,10 @@ idea {
 }
 
 tasks.named('jar', Jar).configure {
-    dependsOn project(":common").tasks.named("classes")
-    from(project(":common").sourceSets.main.output)
+    from({ configurations.runtimeClasspath
+            .filter { it.name.startsWith('vitalrelics-common') }
+            .collect { zipTree(it) } })
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+

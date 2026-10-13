@@ -325,5 +325,11 @@
 
   "item.vitalrelics.bastion_ring": "Bastion Ring",
   "tooltip.vitalrelics.bastion_ring": "Shares the wearer's damage reduction with nearby allies.",
-  "relic.vitalrelics.passive_skill.damage_reduction_aura": "Damage Reduction Aura"
+  "relic.vitalrelics.passive_skill.damage_reduction_aura": "Damage Reduction Aura",
+
+  "item.vitalrelics.cherry_anklet": "Cherry Anklet",
+  "tooltip.vitalrelics.cherry_anklet": "A spring-laced anklet that turns every jump into a graceful bound.",
+
+  "item.vitalrelics.tidebloom_anklet": "Tidebloom Anklet",
+  "tooltip.vitalrelics.tidebloom_anklet": "A tide-kissed anklet that carries you swiftly whenever you break into a sprint."
 }

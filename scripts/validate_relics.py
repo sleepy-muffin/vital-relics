@@ -31,7 +31,8 @@ VALID_CURIO_SLOTS = {
     "pendant",
     "necklace",
     "head",
-    "body",
+    "back",
+    "feet",
 }
 
 ITEM_ID_PATTERN = re.compile(r"^[a-z0-9_.-]+:[a-z0-9/._-]+$")

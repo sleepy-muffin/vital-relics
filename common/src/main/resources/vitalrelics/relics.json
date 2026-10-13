@@ -639,6 +639,7 @@
     {
       "id": "celestial_wings",
       "texture": "celestial_wings.png",
+      "curio_slot": "back",
       "rarity": "epic",
       "passive_skills": {
         "flight": 1
@@ -957,6 +958,52 @@
       }
     },
     {
+      "id": "cherry_anklet",
+      "display_name": "Cherry Anklet",
+      "tooltip": "A spring-laced anklet that turns every jump into a graceful bound.",
+      "texture": "cherry_anklet.png",
+      "curio_slot": "feet",
+      "rarity": "epic",
+      "granted_effects": {
+        "jump_boost": 4
+      },
+      "immune_to_effects": [
+        "slowness"
+      ],
+      "callbacks": {
+        "damage_taken": {
+          "modifier": 0.84
+        },
+        "invulnerable_time_taken": {
+          "flat": 10
+        }
+      }
+    },
+    {
+      "id": "tidebloom_anklet",
+      "display_name": "Tidebloom Anklet",
+      "tooltip": "A tide-kissed anklet that carries you swiftly whenever you break into a sprint.",
+      "texture": "tidebloom_anklet.png",
+      "curio_slot": "feet",
+      "rarity": "epic",
+      "granted_effects": {
+        "speed": 4
+      },
+      "immune_to_effects": [
+        "slowness"
+      ],
+      "properties": {
+        "attack_speed": {
+          "mul_total": 1.15
+        }
+      },
+      "callbacks": {
+        "invulnerable_time_dealt": {
+          "modifier": 0.5
+        }
+      }
+    },
+    {
       "id": "reality_rend",
       "display_name": "Halo of Reality Rend (Creative Mode Only)",
       "tooltip": "A creative-mode Relic (cannot be obtained in survival mode). ",
@@ -972,7 +1019,7 @@
       "passive_skills": {
         "retarget_arrow": 2,
         "reality_severance": 32,
-        "iron_curtain": 2.1,
+        "iron_curtain": 30,
         "lingering_wound": 1
       },
       "properties": {

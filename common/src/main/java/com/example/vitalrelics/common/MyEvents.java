@@ -8,7 +8,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@SuppressWarnings("unused")
 public final class MyEvents {
+
+	private MyEvents() {
+	}
+
+	/*
+	CALLBACKS
+	 */
+
 	public static int onExperienceGain(
 			final MyLivingEntity player, final int amount,
 			final int experienceNeededForNextLevel
@@ -27,9 +36,6 @@ public final class MyEvents {
 
 		final double multiplier = 1.0 + level * (experienceNeededForNextLevel / 7.0 - 1.0);
 		return (int) Math.min(Integer.MAX_VALUE, Math.max(amount, Math.round(amount * multiplier)));
-	}
-
-	private MyEvents() {
 	}
 
 	public static void onLivingEntityTick(
@@ -52,8 +58,8 @@ public final class MyEvents {
 							value.add + myLivingEntity.maxHealth() * value.ratio_add));
 
 					if (healingAuraLevel > 0.0) {
-						final double range = healingAuraLevel;
-						for (final MyLivingEntity target : myLivingEntity.livingEntitiesInRange(range)) {
+						final double healingAuraRange = healingAuraLevel;
+						for (final MyLivingEntity target : myLivingEntity.livingEntitiesInRange(healingAuraRange)) {
 							if (myLivingEntity.isAllied(target)) {
 								target.heal((float) (
 										value.add + target.maxHealth() * value.ratio_add));
@@ -306,19 +312,12 @@ public final class MyEvents {
 					victim.maxHealth()
 			);
 		}
+		final int ironCurtainLevel = (int)Math.round(Loader.levelOfSuchPassiveSkill(
+				victimRelics, Relic.PASSIVE_SKILL_IRON_CURTAIN));
 
-		final int invulnerableTime = Math.round((float) Loader.applyCallback(
-				victimRelics, "invulnerable_time_taken", victim.invulnerableTime(), 10.0));
-
-		final double ironCurtainLevel = Loader.levelOfSuchPassiveSkill(
-				victimRelics, Relic.PASSIVE_SKILL_IRON_CURTAIN);
 		if (ironCurtainLevel != 0.0) {
-			if (victim.invulnerableTime() != invulnerableTime) {
-				if (!Scheduler.INSTANCE().acquireProtection(victim.uuid(), currentTick, invulnerableTime)) {
-					amount = 0.0F;
-				}
-
-				victim.setInvulnerableTime(invulnerableTime);
+			if (!Scheduler.INSTANCE().acquireProtection(victim.uuid(), currentTick, ironCurtainLevel)) {
+				amount = 0.0F;
 			}
 		}
 
@@ -376,6 +375,54 @@ public final class MyEvents {
 		}
 
 		return Math.max(0.0F, amount);
+	}
+
+
+    /**
+     * @param victim The living entity who receives damage
+     * @param source The damage source
+     * @param called_from_pre_hooks Some versions do not support post-hooks
+	 *                              If this function has to be called from pre-hooks
+	 *                              When true, compatible rough methods will be applied
+     * @param currentTick The current server tick
+     */
+	public static void onLivingDamagePost(
+			final MyLivingEntity victim,
+			final MyDamageSource source,
+			final boolean called_from_pre_hooks,
+			final int currentTick) {
+
+		// final int victim.invulnerableTime();
+
+		// NOTE
+		// There was a bug here, invulnerableTime should apply regardless of `iron_curtain`
+		// `iron_curtain` is dedicated for the case the damage bypass it, so this passive
+		// skill must be used very carefully as it's somehow hacking.
+		// WARNING
+		// This is not compatible with other mods, consider moving it into post-damage hooks.
+
+		final List<Relic> victimRelics = MyRuntime.getRuntimeUtils().gatherRelics(victim);
+
+
+		final int invulnerableTime = Math.round((float) Loader.applyCallback(
+				victimRelics,
+				"invulnerable_time_taken",
+				called_from_pre_hooks ? 10 : victim.invulnerableTime(),
+				10)
+		);
+
+		if (
+				called_from_pre_hooks
+				? 10 != invulnerableTime
+				: victim.invulnerableTime() != invulnerableTime
+		) {
+
+			// If the invulnerableTime differs, apply it.
+			victim.setInvulnerableTime(invulnerableTime);
+
+			// Apply only when iron_curtain presents
+		}
+
 	}
 
 	/*

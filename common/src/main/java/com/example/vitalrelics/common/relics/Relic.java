@@ -142,6 +142,7 @@ public class Relic {
 			public Double maximum = null;
 			public Double ratio_maximum = null;
 
+			@Deprecated(since = "Use `applyFlat`, `applyModifier`, `clamp` manually instead. ")
 			public double process(final double amount, final double reference) {
 				double result = amount;
 
@@ -151,6 +152,18 @@ public class Relic {
 					result += flat;
 
 				return sigmoidClamp(result, lowerBound(reference), upperBound(reference));
+			}
+
+			public double applyFlat(final double amount) {
+				return flat != null ? amount + flat : amount;
+			}
+
+			public double applyModifier(final double amount) {
+				return modifier != null ? amount * modifier : amount;
+			}
+
+			public double clamp(final double value, final double reference) {
+				return sigmoidClamp(value, lowerBound(reference), upperBound(reference));
 			}
 
 			private double lowerBound(final double reference) {

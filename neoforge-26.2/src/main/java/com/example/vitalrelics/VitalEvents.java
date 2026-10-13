@@ -42,6 +42,7 @@ import java.util.Map;
 
 import static com.example.vitalrelics.Utils.*;
 
+@SuppressWarnings("unused")
 public final class VitalEvents {
     @SubscribeEvent
     public static void onRelicBlockBreak(final BreakBlockEvent event) {
@@ -264,6 +265,28 @@ public final class VitalEvents {
 				new NeoLivingEntity(victim), myDamageSource,
 				event.getNewDamage(), server.getTickCount()
 		));
+	}
+
+
+
+	@SubscribeEvent
+	public static void onLivingDamage(final LivingDamageEvent.Post event) {
+		final LivingEntity victim = event.getEntity();
+
+		if (victim.level().isClientSide())
+			return;
+
+		final MinecraftServer server = victim.level().getServer();
+		if (server == null)
+			return;
+
+		final MyDamageSource myDamageSource =
+				new NeoDamageSource(event.getSource());
+
+		MyEvents.onLivingDamagePost(
+				new NeoLivingEntity(victim), myDamageSource,
+				false, server.getTickCount()
+		);
 	}
 
 

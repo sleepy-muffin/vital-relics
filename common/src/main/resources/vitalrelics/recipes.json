@@ -931,6 +931,34 @@
         "K": "vitalrelics:rare_relic_core"
       },
       "count": 1
+    },
+    "cherry_anklet": {
+      "type": "shaped",
+      "pattern": [
+        "C C",
+        "GKG",
+        " C "
+      ],
+      "key": {
+        "C": "minecraft:cherry_leaves",
+        "G": "minecraft:gold_ingot",
+        "K": "vitalrelics:epic_relic_core"
+      },
+      "count": 1
+    },
+    "tidebloom_anklet": {
+      "type": "shaped",
+      "pattern": [
+        "P P",
+        "GKG",
+        " P "
+      ],
+      "key": {
+        "P": "minecraft:prismarine_crystals",
+        "G": "minecraft:gold_ingot",
+        "K": "vitalrelics:epic_relic_core"
+      },
+      "count": 1
     }
   },
   "loot": {

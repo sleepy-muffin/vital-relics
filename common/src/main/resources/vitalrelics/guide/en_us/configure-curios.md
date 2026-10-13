@@ -105,6 +105,8 @@ Available Passive skills:
      the player's held tool.
 - `area_mining`: Mines nearby blocks within `level` blocks while preserving
      the player's held tool and normal mining context.
+- `damage_reduction_aura`: Shares the wearer's damage reduction with nearby allies.
+
 
 Example
 ```json

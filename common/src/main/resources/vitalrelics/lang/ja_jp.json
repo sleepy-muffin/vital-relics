@@ -325,5 +325,11 @@
 
   "item.vitalrelics.bastion_ring": "要塞のオーラの指輪",
   "tooltip.vitalrelics.bastion_ring": "装備者のダメージ軽減を近くの味方と共有する。",
-  "relic.vitalrelics.passive_skill.damage_reduction_aura": "ダメージ軽減オーラ"
+  "relic.vitalrelics.passive_skill.damage_reduction_aura": "ダメージ軽減オーラ",
+
+  "item.vitalrelics.cherry_anklet": "桜のアンクレット",
+  "tooltip.vitalrelics.cherry_anklet": "跳ぶたびに優雅な跳躍をもたらす、弾みを秘めたアンクレット。",
+
+  "item.vitalrelics.tidebloom_anklet": "潮花のアンクレット",
+  "tooltip.vitalrelics.tidebloom_anklet": "駆け出した者を潮の流れのように素早く運ぶ、潮に祝福されたアンクレット。"
 }

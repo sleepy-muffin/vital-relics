@@ -43,6 +43,8 @@ import java.util.UUID;
 
 import static com.example.vitalrelics.Utils.*;
 
+
+@SuppressWarnings("unused")
 public final class VitalEvents {
     @SubscribeEvent
     public static void onRelicBlockBreak(final BlockEvent.BreakEvent event) {
@@ -287,10 +289,19 @@ public final class VitalEvents {
 		final MyDamageSource myDamageSource =
 				new ForgeDamageSource(event.getSource());
 
+		final var myLivingEntity = new ForgeLivingEntity(victim);
+
 		event.setAmount(MyEvents.onLivingDamage(
-				new ForgeLivingEntity(victim), myDamageSource,
+				myLivingEntity, myDamageSource,
 				event.getAmount(), server.getTickCount()
 		));
+
+		MyEvents.onLivingDamagePost(
+				myLivingEntity,
+				myDamageSource,
+				true,
+				server.getTickCount()
+		);
 	}
 
 	@SubscribeEvent

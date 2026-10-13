@@ -415,24 +415,59 @@ public class Loader {
 
 	/**
 	 * This function will not return negative value.
+	 * <p>
+	 * Because the bounds may differ by callback,
+	 * preserve the existing per-callback processing
+	 * and only separate flat and multiplicative contributions
+	 * within each callback, or aggregate the callback phases
+	 * while retaining the appropriate Info instance.
 	 */
 	public static double applyCallback(
 			final List<Relic> relics, final String callbackId, final double value,
 			final double reference
 	) {
 
-		double result = value;
+		final List<Relic.Callbacks.Info> callbacks = new ArrayList<>();
 
 		for (final Relic relic : relics) {
 			final Relic.Callbacks.Info callback =
 					relic.callbacks.get(callbackId);
 
 			if (callback != null)
-				result = callback.process(result, reference);
+				callbacks.add(callback);
 		}
+
+		double result = value;
+
+		for (final Relic.Callbacks.Info callback : callbacks)
+			result = callback.applyFlat(result);
+
+		for (final Relic.Callbacks.Info callback : callbacks)
+			result = callback.applyModifier(result);
+
+		for (final Relic.Callbacks.Info callback : callbacks)
+			result = callback.clamp(result, reference);
 
 		return Math.max(0.0F, result);
 	}
+
+//	public static double applyCallback(
+//			final List<Relic> relics, final String callbackId, final double value,
+//			final double reference
+//	) {
+//
+//		double result = value;
+//
+//		for (final Relic relic : relics) {
+//			final Relic.Callbacks.Info callback =
+//					relic.callbacks.get(callbackId);
+//
+//			if (callback != null)
+//				result = callback.process(result, reference);
+//		}
+//
+//		return Math.max(0.0F, result);
+//	}
 
 	public static boolean isImmuneToEffect(
 			final List<Relic> relics,

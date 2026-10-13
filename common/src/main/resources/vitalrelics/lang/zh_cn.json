@@ -325,5 +325,11 @@
 
   "item.vitalrelics.bastion_ring": "堡垒光环戒指",
   "tooltip.vitalrelics.bastion_ring": "将佩戴者的伤害减免分享给附近的盟友。",
-  "relic.vitalrelics.passive_skill.damage_reduction_aura": "伤害减免光环"
+  "relic.vitalrelics.passive_skill.damage_reduction_aura": "伤害减免光环",
+
+  "item.vitalrelics.cherry_anklet": "樱花脚链",
+  "tooltip.vitalrelics.cherry_anklet": "由花朵编织而成的脚链，让每一步都充满弹性。",
+
+  "item.vitalrelics.tidebloom_anklet": "潮花脚链",
+  "tooltip.vitalrelics.tidebloom_anklet": "沐浴潮汐祝福的脚链，让你起跑时如水流般迅捷。"
 }

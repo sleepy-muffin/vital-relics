@@ -2,9 +2,17 @@ package com.example.vitalrelics.common;
 
 import java.util.List;
 
+/**
+ * Central registry of mod-wide constants: the mod id, version strings,
+ * internal resource paths, and commonly used Minecraft IDs.
+ * <p>
+ * Kept intentionally dependency-free so it can be referenced from every loader module.
+ */
 public class Manifest {
 	public static final String MODID = "vitalrelics";
-	public static final String VERSION = "0.7.14";
+
+	// Source code no-longer tracks it. As it does not help.
+	// public static final String VERSION = "0.7.14";
 
 	// Increase these versions only when the corresponding configuration format changes.
 	// Ordinary additions or edits to built-in definitions do not require a version bump.

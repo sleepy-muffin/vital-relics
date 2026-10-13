@@ -321,5 +321,9 @@
   "relic.vitalrelics.spell.borebolt": "Borebolt",
   "item.vitalrelics.discord_bracelet": "Discord Bracelet",
   "tooltip.vitalrelics.discord_bracelet": "Compels the nearest living creature to strike the pointed target immediately, even an ally or you.",
-  "relic.vitalrelics.spell.compel_attack": "Compel Attack"
+  "relic.vitalrelics.spell.compel_attack": "Compel Attack",
+
+  "item.vitalrelics.bastion_ring": "Bastion Ring",
+  "tooltip.vitalrelics.bastion_ring": "Shares the wearer's damage reduction with nearby allies.",
+  "relic.vitalrelics.passive_skill.damage_reduction_aura": "Damage Reduction Aura"
 }

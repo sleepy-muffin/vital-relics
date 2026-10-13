@@ -238,6 +238,22 @@
       }
     },
     {
+      "id": "bastion_ring",
+      "display_name": "Ring of the Bastion Aura",
+      "tooltip": "Shares the wearer's damage reduction with nearby allies.",
+      "texture": "ring_bastion_aura.png",
+      "curio_slot": "ring",
+      "rarity": "rare",
+      "passive_skills": {
+        "damage_reduction_aura": 12
+      },
+      "callbacks": {
+        "damage_taken": {
+          "modifier": 0.92
+        }
+      }
+    },
+    {
       "id": "timberheart_ring",
       "display_name": "Timberheart Ring",
       "tooltip": "Break a log to fell connected logs with your held tool. Sneak to disable; leaves decay naturally.",

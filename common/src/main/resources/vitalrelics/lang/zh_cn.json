@@ -321,5 +321,9 @@
   "relic.vitalrelics.spell.borebolt": "穿岩箭",
   "item.vitalrelics.discord_bracelet": "纷争手镯",
   "tooltip.vitalrelics.discord_bracelet": "令最近的其他生物立即攻击指向的目标；攻击者也可能是盟友或你。",
-  "relic.vitalrelics.spell.compel_attack": "强制攻击"
+  "relic.vitalrelics.spell.compel_attack": "强制攻击",
+
+  "item.vitalrelics.bastion_ring": "堡垒光环戒指",
+  "tooltip.vitalrelics.bastion_ring": "将佩戴者的伤害减免分享给附近的盟友。",
+  "relic.vitalrelics.passive_skill.damage_reduction_aura": "伤害减免光环"
 }

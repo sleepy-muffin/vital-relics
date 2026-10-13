@@ -321,5 +321,9 @@
   "relic.vitalrelics.spell.borebolt": "穿岩矢",
   "item.vitalrelics.discord_bracelet": "不和の腕輪",
   "tooltip.vitalrelics.discord_bracelet": "最も近い別の生物に、狙った対象を即座に攻撃させる。味方や使用者も攻撃者になり得る。",
-  "relic.vitalrelics.spell.compel_attack": "強制攻撃"
+  "relic.vitalrelics.spell.compel_attack": "強制攻撃",
+
+  "item.vitalrelics.bastion_ring": "要塞のオーラの指輪",
+  "tooltip.vitalrelics.bastion_ring": "装備者のダメージ軽減を近くの味方と共有する。",
+  "relic.vitalrelics.passive_skill.damage_reduction_aura": "ダメージ軽減オーラ"
 }

@@ -60,6 +60,10 @@ public class Relic {
 	public static final String PASSIVE_SKILL_TREE_FELLER = "tree_feller";
 	public static final String PASSIVE_SKILL_AREA_MINING = "area_mining";
 	public static final String PASSIVE_SKILL_SUFFOCATION_ZONE = "suffocation_zone";
+	public static final String PASSIVE_SKILL_ARMOR_AURA = "armor_aura";
+	public static final String PASSIVE_SKILL_DAMAGE_REDUCTION_AURA = "damage_reduction_aura";
+
+
 
 	public final Map<String, Double> passive_skills = new LinkedHashMap<>();
 

@@ -917,6 +917,20 @@
         "C": "vitalrelics:rare_relic_core"
       },
       "count": 1
+    },
+    "bastion_ring": {
+      "type": "shaped",
+      "pattern": [
+        "SG ",
+        "GKG",
+        " G "
+      ],
+      "key": {
+        "S": "minecraft:shield",
+        "G": "minecraft:gold_ingot",
+        "K": "vitalrelics:rare_relic_core"
+      },
+      "count": 1
     }
   },
   "loot": {
@@ -1494,6 +1508,16 @@
       {
         "table": "minecraft:chests/stronghold_corridor",
         "chance": 0.04
+      }
+    ],
+    "bastion_ring": [
+      {
+        "table": "minecraft:chests/bastion_treasure",
+        "chance": 0.05
+      },
+      {
+        "table": "minecraft:chests/ancient_city",
+        "chance": 0.03
       }
     ]
   }

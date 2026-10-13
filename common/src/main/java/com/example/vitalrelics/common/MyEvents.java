@@ -270,6 +270,43 @@ public final class MyEvents {
 		amount = (float) Loader.applyCallback(
 				victimRelics, "damage_taken", amount, victim.maxHealth());
 
+		final MyRuntimeUtils runtime = MyRuntime.getRuntimeUtils();
+
+		// TODO
+		// I know this is not perfect. But, I guess, there should be nobody
+		// using more than 64, right?
+		// I will definitely fix it in the future anyway.
+		for (final MyLivingEntity damageReductionAuraBearer :
+				victim.livingEntitiesInRange(64.0)) {
+
+			if (damageReductionAuraBearer.is(victim))
+				continue;
+
+			if (!victim.isAllied(damageReductionAuraBearer))
+				continue;
+
+			final List<Relic> bearerRelics = runtime.gatherRelics(damageReductionAuraBearer);
+
+			final double damageReductionAuraRange = Loader.levelOfSuchPassiveSkill(
+					bearerRelics,
+					Relic.PASSIVE_SKILL_DAMAGE_REDUCTION_AURA
+			);
+
+			// Whether he really has it
+			if (!Double.isFinite(damageReductionAuraRange) || damageReductionAuraRange <= 0.0)
+				continue;
+
+			if (MyUtils.distanceBetween(victim, damageReductionAuraBearer) > damageReductionAuraRange)
+				continue;
+
+			amount = (float) Loader.applyCallback(
+					bearerRelics,
+					"damage_taken",
+					amount,
+					victim.maxHealth()
+			);
+		}
+
 		final int invulnerableTime = Math.round((float) Loader.applyCallback(
 				victimRelics, "invulnerable_time_taken", victim.invulnerableTime(), 10.0));
 

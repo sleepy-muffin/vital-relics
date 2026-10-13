@@ -18,6 +18,9 @@ permissions:
 jobs:
   build-release:
     runs-on: ubuntu-latest
+    env:
+      # Prevent Java-version-specific Gradle caches from being reused
+      GRADLE_USER_HOME: ${{ runner.temp }}/gradle-home
 
     steps:
       - name: Checkout

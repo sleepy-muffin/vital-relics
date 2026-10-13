@@ -75,6 +75,11 @@ neoForge {
             sourceSet(sourceSets.main)
         }
     }
+
+
+    accessTransformers.from(
+            file("src/main/templates/META-INF/accesstransformer.cfg")
+    )
 }
 
 sourceSets.main.resources {

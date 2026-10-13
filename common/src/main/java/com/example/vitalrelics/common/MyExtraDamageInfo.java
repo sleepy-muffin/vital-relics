@@ -224,7 +224,7 @@ public class MyExtraDamageInfo {
 	}
 
 	private void dealToLivingEntity(final MyLivingEntity target) {
-		if (target.isDeadOrDying() || !target.isLoaded()) {
+		if (target.isDeadOrDying() || !target.isLevelLoadedHere()) {
 			return;
 		}
 		if (attacker.uuid().equals(target.uuid())) {

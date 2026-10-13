@@ -13,7 +13,7 @@ public final class MyEvents {
 			final MyLivingEntity player, final int amount,
 			final int experienceNeededForNextLevel
 	) {
-		MyUtils.requireLoaded(player);
+		MyUtils.requireValidEntity(player);
 
 		if (amount <= 0 || experienceNeededForNextLevel <= 0)
 			return amount;
@@ -35,7 +35,7 @@ public final class MyEvents {
 	public static void onLivingEntityTick(
 			MyLivingEntity myLivingEntity, final int currentTick, List<Relic> relics) {
 
-		MyUtils.requireLoaded(myLivingEntity);
+		MyUtils.requireValidEntity(myLivingEntity);
 
 		spawnEnemyRelicParticles(myLivingEntity, relics, currentTick);
 
@@ -182,7 +182,7 @@ public final class MyEvents {
 	public static void spawnEnemyRelicParticles(
 			final MyLivingEntity entity, final List<Relic> relics, final int currentTick) {
 
-		MyUtils.requireLoaded(entity);
+		MyUtils.requireValidEntity(entity);
 
 		final MyRuntimeUtils runtime = MyRuntime.getRuntimeUtils();
 		if (!runtime.hasEnemyRelics(entity) || relics.isEmpty() || currentTick % 2 != 0)
@@ -340,7 +340,7 @@ public final class MyEvents {
 					victim.uuid(),
 					new Scheduler.DelayTask(
 							1, 1, () -> {
-						if (!victim.isLoaded() || victim.isDeadOrDying())
+						if (!victim.isLevelLoadedHere() || victim.isDeadOrDying())
 							return;
 
 						applyLingeringWound(attacker, victim);
@@ -364,7 +364,7 @@ public final class MyEvents {
 						attacker.uuid(),
 						new Scheduler.DelayTask(
 								1, 1, () -> {
-							if (!attacker.isLoaded() || attacker.isDeadOrDying())
+							if (!attacker.isLevelLoadedHere() || attacker.isDeadOrDying())
 								return;
 
 							attacker.hurtThorns(victim, thornsDamage);
@@ -384,7 +384,7 @@ public final class MyEvents {
 	public static void accumulateLingeringWound(
 			final MyLivingEntity target, final float amount, final double level, final int currentTick) {
 
-		MyUtils.requireLoaded(target);
+		MyUtils.requireValidEntity(target);
 
 		if (level <= 0.0)
 			return;
@@ -396,8 +396,8 @@ public final class MyEvents {
 	public static void applyLingeringWound(
 			final MyLivingEntity attacker, final MyLivingEntity target) {
 
-		MyUtils.requireLoaded(attacker);
-		MyUtils.requireLoaded(target);
+		MyUtils.requireValidEntity(attacker);
+		MyUtils.requireValidEntity(target);
 
 		final float accumulatedDamage = Scheduler.INSTANCE().healingPrevention(target.uuid());
 		final float allowedHealth = target.maxHealth() - accumulatedDamage;
@@ -411,7 +411,7 @@ public final class MyEvents {
 			final MyAbstractArrow arrow, final MyLivingEntity owner,
 			final List<Relic> relics, final int currentTick) {
 
-		MyUtils.requireLoaded(arrow);
+		MyUtils.requireValidEntity(arrow);
 		// MyUtils.requireLoaded(owner);
 
 		final double empoweredLevel = Loader.levelOfSuchPassiveSkill(
@@ -444,8 +444,8 @@ public final class MyEvents {
 			final MyAbstractArrow arrow, final MyLivingEntity victim,
 			final List<Relic> relics, final int currentTick
 	) {
-		MyUtils.requireLoaded(arrow);
-		MyUtils.requireLoaded(victim);
+		MyUtils.requireValidEntity(arrow);
+		MyUtils.requireValidEntity(victim);
 
 		final double retargetLevel = Loader.levelOfSuchPassiveSkill(
 				relics, Relic.PASSIVE_SKILL_RETARGET_ARROW);
@@ -478,8 +478,8 @@ public final class MyEvents {
 	public static boolean onChangeTarget(
 			final MyLivingEntity self, final MyLivingEntity target) {
 
-		MyUtils.requireLoaded(self);
-		MyUtils.requireLoaded(target);
+		MyUtils.requireValidEntity(self);
+		MyUtils.requireValidEntity(target);
 
 		// Passive Skill: Suffocation Zone
 		if (MyUtils.blockedBySuffocationZone(self, target)) {

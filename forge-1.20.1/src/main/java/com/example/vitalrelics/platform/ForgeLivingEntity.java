@@ -289,7 +289,7 @@ public final class ForgeLivingEntity extends ForgeEntity implements MyLivingEnti
 	}
 
 	@Override
-	public boolean isLoaded() {
+	public boolean isLevelLoadedHere() {
 		return livingEntity.level().isLoaded(livingEntity.blockPosition());
 	}
 

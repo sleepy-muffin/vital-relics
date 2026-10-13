@@ -53,7 +53,7 @@ public class NeoForgeEntity implements MyEntity {
 	}
 
 	@Override
-	public boolean isLoaded() {
+	public boolean isLevelLoadedHere() {
 		return entity.level().isLoaded(entity.blockPosition());
 	}
 

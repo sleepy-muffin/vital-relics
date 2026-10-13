@@ -582,7 +582,7 @@ def main() -> int:
         )
     except ValidationError as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
-        # return 1
+        return 1
 
     print(
         "PASS: "

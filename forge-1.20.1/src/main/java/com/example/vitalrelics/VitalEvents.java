@@ -146,6 +146,7 @@ public final class VitalEvents {
 			return;
 		}
 
+
 		final MinecraftServer server = livingEntity.getServer();
 		if (server == null)
 			return;
@@ -153,8 +154,8 @@ public final class VitalEvents {
 		final List<Relic> relics = gatherRelics(livingEntity);
 		final int currentTickCount = server.getTickCount();
 
-		final MyLivingEntity entity = new ForgeLivingEntity(livingEntity);
-		MyEvents.onLivingEntityTick(entity, currentTickCount, relics);
+		final MyLivingEntity myLivingEntity = new ForgeLivingEntity(livingEntity);
+		MyEvents.onLivingEntityTick(myLivingEntity, currentTickCount, relics);
 
 		if (currentTickCount % 20 == 0) {
 			// Properties

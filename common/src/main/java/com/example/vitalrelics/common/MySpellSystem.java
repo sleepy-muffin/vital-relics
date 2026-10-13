@@ -411,7 +411,7 @@ public final class MySpellSystem {
 
 	public void syncSpellHud(final MyLivingEntity caster) {
 		Objects.requireNonNull(caster, "caster");
-		MyUtils.requireLoaded(caster);
+		MyUtils.requireValidEntity(caster);
 
 		final int tick = caster.serverTick();
 		if (tick < 0)
@@ -437,7 +437,7 @@ public final class MySpellSystem {
 		Objects.requireNonNull(caster, "caster");
 		Objects.requireNonNull(abilityId, "abilityId");
 
-		MyUtils.requireLoaded(caster);
+		MyUtils.requireValidEntity(caster);
 
 		if (caster.isClientSide() || !abilityId.matches("[a-z0-9_./-]{1,64}"))
 			return;

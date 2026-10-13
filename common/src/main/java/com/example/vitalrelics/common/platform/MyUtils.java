@@ -10,12 +10,14 @@ import java.util.Objects;
 public class MyUtils {
 
 
-	public static void requireLoaded(final MyEntity entity) {
+	public static void requireValidEntity(final MyEntity entity) {
 		Objects.requireNonNull(entity, "entity is null");
 
-		if (!entity.isLoaded()) {
-			throw new IllegalStateException("entity were not loaded");
-		}
+		// WARNING
+		// This is not required for THIS function.
+//		if (!entity.isLevelLoadedHere()) {
+//			throw new IllegalStateException("entity were not loaded");
+//		}
 	}
 
 
@@ -24,7 +26,7 @@ public class MyUtils {
 			final MyLivingEntity.MyEffectCategory category
 	) {
 
-		requireLoaded(entity);
+		requireValidEntity(entity);
 		Objects.requireNonNull(relics, "relics");
 		Objects.requireNonNull(category, "category");
 
@@ -46,7 +48,7 @@ public class MyUtils {
 			final MyLivingEntity.MyEffectCategory category
 	) {
 
-		requireLoaded(entity);
+		requireValidEntity(entity);
 		Objects.requireNonNull(category, "category");
 
 		boolean removed = false;
@@ -97,7 +99,7 @@ public class MyUtils {
 		Objects.requireNonNull(entity0, "entity0");
 		Objects.requireNonNull(entity1, "entity1");
 
-		if (!entity0.isLoaded() || !entity1.isLoaded()) {
+		if (!entity0.isLevelLoadedHere() || !entity1.isLevelLoadedHere()) {
 			throw new IllegalStateException("entities were not loaded");
 		}
 
@@ -111,8 +113,8 @@ public class MyUtils {
 	public static boolean blockedBySuffocationZone(
 			final MyLivingEntity self, final MyLivingEntity target) {
 
-		requireLoaded(self);
-		requireLoaded(target);
+		requireValidEntity(self);
+		requireValidEntity(target);
 
 		// Passive Skill: Suffocation Zone
 		final List<Relic> targetRelics = MyRuntime.getRuntimeUtils().gatherRelics(target);

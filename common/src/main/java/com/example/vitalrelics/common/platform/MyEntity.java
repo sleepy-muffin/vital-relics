@@ -13,7 +13,7 @@ public interface MyEntity {
 	void setVelocity(double x, double y, double z);
 	void markMovementChanged();
 
-	boolean isLoaded();
+	boolean isLevelLoadedHere();
 	boolean isClientSide();
 
 	List<MyEntity> entitiesInRange(double radius);

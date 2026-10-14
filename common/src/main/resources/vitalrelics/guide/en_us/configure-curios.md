@@ -76,14 +76,18 @@ Available Passive skills:
 - `metal_mending`: Repairs up to level durability every 4 seconds
 - `flight`: Any level > 0 grants flight; flight speed = vanilla flight speed × level,
      does not change the speed if the level is 1.0
-- `empowered_arrows`: Multiplies arrow charge, velocity, and base damage by level
+- `empowered_arrows`: Multiplies base damage by level
+- `thrusting_arrows`: Multiplies velocity by level
 - `gravityless_arrows`: Makes every arrow fired by the bearer ignore gravity and
      disappear after `level` seconds, including arrows fired by relic spells
 - `lifesteal`: Heals the bearer for damage dealt × level
 - `thorns`: Reflects received damage × level; reflection is limited by a cooldown
 - `fire_resistance`: Extinguish fire.
 - `lava_swimmer`: Reserved passive-skill ID. It currently has no runtime effect.
-- `iron_curtain`: super invulnerable time
+- `iron_curtain`: ticks = Math.round(level).
+     It is no longer a boolean value, it does not demand invincibleTimeTaken anymore. 
+     On receiving damage, the bearer ignores the all following damages within `ticks`
+     by setting the damage to `0`.
 - `lingering_wound`: Accumulates a portion of damage dealt as a temporary wound that
      reduces the target's effective maximum health,
      preventing healing above the remaining health limit.

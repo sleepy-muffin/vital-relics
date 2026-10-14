@@ -91,6 +91,7 @@ public class Scheduler {
 	private final MyMap<MyList<DelayTask>> DELAYED_TASK_LIST = new MyMap<>();
 	private final MyMap<Float> HEAL_PREVENTION_LIST = new MyMap<>(320);
 	private final MyMap<Integer> PROTECTED_PLAYER_LIST = new MyMap<>();
+//	private final MyMap<Double> GRAVITYLESS_ARROW_SPEEDS = new MyMap<>();
 
 	private final MyMap<SpellState> SPELL_STATE_LIST = new MyMap<>(0);
 	private final MyMap<FlightState> FLIGHT_STATE_LIST = new MyMap<>(0);
@@ -146,7 +147,9 @@ public class Scheduler {
 			THORNS_COOLDOWN_LIST.cleanUp(currentTickCount, runtime::isEntityValid);
 			ARROW_DEFLECTION_COOLDOWN_LIST.cleanUp(currentTickCount, runtime::isEntityValid);
 			AUTO_MOVE_SUPPRESSION_LIST.cleanUp(currentTickCount, runtime::isEntityValid);
+//			GRAVITYLESS_ARROW_SPEEDS.cleanUp(currentTickCount, runtime::isEntityValid);
 			FLIGHT_STATE_LIST.cleanUp(currentTickCount, runtime::isEntityValid);
+
 		}
 	}
 
@@ -159,6 +162,7 @@ public class Scheduler {
 		SPELL_STATE_LIST.remove(uuid);
 		THORNS_COOLDOWN_LIST.remove(uuid);
 		ARROW_DEFLECTION_COOLDOWN_LIST.remove(uuid);
+//		GRAVITYLESS_ARROW_SPEEDS.remove(uuid);
 		AUTO_MOVE_SUPPRESSION_LIST.remove(uuid);
 		FLIGHT_STATE_LIST.remove(uuid);
 	}
@@ -170,6 +174,7 @@ public class Scheduler {
 		PROTECTED_PLAYER_LIST.clear();
 		SPELL_STATE_LIST.clear();
 		THORNS_COOLDOWN_LIST.clear();
+//		GRAVITYLESS_ARROW_SPEEDS.clear();
 		ARROW_DEFLECTION_COOLDOWN_LIST.clear();
 		AUTO_MOVE_SUPPRESSION_LIST.clear();
 		FLIGHT_STATE_LIST.clear();
@@ -269,6 +274,27 @@ public class Scheduler {
 	}
 
 	/*
+	Gravityless Arrow
+	 */
+
+//	public void setGravitylessArrowSpeed(
+//			final UUID arrowUuid,
+//			final int currentTick,
+//			final double speed
+//	) {
+//		GRAVITYLESS_ARROW_SPEEDS.put(arrowUuid, currentTick, speed);
+//	}
+//
+//	public Double gravitylessArrowSpeed(final UUID arrowUuid) {
+//		return GRAVITYLESS_ARROW_SPEEDS.get(arrowUuid);
+//	}
+
+	// Auto-cleanup should clean it.
+//	public void removeGravitylessArrowSpeed(final UUID arrowUuid) {
+//		GRAVITYLESS_ARROW_SPEEDS.remove(arrowUuid);
+//	}
+
+	/*
 	Delayed Task
 	 */
 
@@ -298,7 +324,7 @@ public class Scheduler {
 	Healing Prevention
 	 */
 
-	public float addHealingPrevention(
+	public void addHealingPrevention(
 			final UUID uuid,
 			final int currentTick,
 			final float amount) {
@@ -307,7 +333,6 @@ public class Scheduler {
 				HEAL_PREVENTION_LIST.getOrDefault(uuid, 0.0F) + amount;
 
 		HEAL_PREVENTION_LIST.put(uuid, currentTick, total);
-		return total;
 	}
 
 	public float healingPrevention(final UUID uuid) {

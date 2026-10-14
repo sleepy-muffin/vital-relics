@@ -58,8 +58,7 @@ public final class MyEvents {
 							value.add + myLivingEntity.maxHealth() * value.ratio_add));
 
 					if (healingAuraLevel > 0.0) {
-						final double healingAuraRange = healingAuraLevel;
-						for (final MyLivingEntity target : myLivingEntity.livingEntitiesInRange(healingAuraRange)) {
+                        for (final MyLivingEntity target : myLivingEntity.livingEntitiesInRange(healingAuraLevel)) {
 							if (myLivingEntity.isAllied(target)) {
 								target.heal((float) (
 										value.add + target.maxHealth() * value.ratio_add));
@@ -201,7 +200,7 @@ public final class MyEvents {
 				case "uncommon" -> 0.20;
 				case "rare" -> 0.40;
 				case "epic" -> 1.00;
-				default -> 0.10;
+				default -> 0.15;
 			};
 		}
 
@@ -245,13 +244,13 @@ public final class MyEvents {
 		Offensive Attack
 		 */
 		double lingeringWoundLevel = 0.0;
-		double cinderbrandLevel = 0.0;
+		double cinderBrandLevel = 0.0;
 
 		if (attacker != null) {
 			final List<Relic> attackerRelics = MyRuntime.getRuntimeUtils().gatherRelics(attacker);
 			lingeringWoundLevel = Loader.levelOfSuchPassiveSkill(
 					attackerRelics, Relic.PASSIVE_SKILL_LINGERING_WOUND);
-			cinderbrandLevel = Loader.levelOfSuchPassiveSkill(
+			cinderBrandLevel = Loader.levelOfSuchPassiveSkill(
 					attackerRelics, Relic.PASSIVE_SKILL_CINDER_BRAND);
 
 			amount = (float) Loader.applyCallback(
@@ -325,9 +324,9 @@ public final class MyEvents {
 		Footer
 		 */
 
-		// Passive Skill: Cinderbrand
-		if (attacker != null && cinderbrandLevel > 0.0 && amount > 0.0F)
-			victim.igniteForSeconds(Math.max(1, (int) Math.round(cinderbrandLevel)));
+		// Passive Skill: CinderBrand
+		if (attacker != null && cinderBrandLevel > 0.0 && amount > 0.0F)
+			victim.igniteForSeconds(Math.max(1, (int) Math.round(cinderBrandLevel)));
 
 		// Passive Skill: Lingering Wound
 		if (attacker != null && lingeringWoundLevel > 0.0 && amount > 0.0F) {
@@ -461,30 +460,37 @@ public final class MyEvents {
 		MyUtils.requireValidEntity(arrow);
 		// MyUtils.requireLoaded(owner);
 
+		final double speedLevel = Loader.levelOfSuchPassiveSkill(
+				relics, Relic.PASSIVE_SKILL_THRUSTING_ARROW);
+
+		if (speedLevel > 0.0) {
+			arrow.setVelocity(
+					arrow.velocityX() * speedLevel,
+					arrow.velocityY() * speedLevel,
+					arrow.velocityZ() * speedLevel);
+		}
+
 		final double empoweredLevel = Loader.levelOfSuchPassiveSkill(
 				relics, Relic.PASSIVE_SKILL_EMPOWERED_ARROW);
-
 		if (empoweredLevel > 0.0) {
-			arrow.setVelocity(
-					arrow.velocityX() * empoweredLevel,
-					arrow.velocityY() * empoweredLevel,
-					arrow.velocityZ() * empoweredLevel);
 			arrow.setBaseDamage(arrow.baseDamage() * empoweredLevel);
 		}
 
 		final double gravitylessLevel = Loader.levelOfSuchPassiveSkill(
 				relics, Relic.PASSIVE_SKILL_GRAVITYLESS_ARROWS);
-		if (!Double.isFinite(gravitylessLevel) || gravitylessLevel <= 0.0)
-			return;
+		if (gravitylessLevel > 0.0) {
 
-		arrow.setNoGravity(true);
-		final int lifetimeTicks = (int) Math.min(
-				Integer.MAX_VALUE, Math.max(1.0, Math.ceil(gravitylessLevel * 20.0)));
-		Scheduler.INSTANCE().addDelayedTask(
-				arrow.uuid(),
-				new Scheduler.DelayTask(lifetimeTicks, lifetimeTicks, arrow::discard),
-				currentTick
-		);
+			arrow.setNoGravity(true);
+
+			final int lifetimeTicks = (int) Math.min(
+					Integer.MAX_VALUE, Math.max(1.0, Math.ceil(gravitylessLevel * 20.0)));
+
+			Scheduler.INSTANCE().addDelayedTask(
+					arrow.uuid(),
+					new Scheduler.DelayTask(lifetimeTicks, lifetimeTicks, arrow::discard),
+					currentTick
+			);
+		}
 	}
 
 	public static boolean onArrowImpact(
@@ -515,6 +521,11 @@ public final class MyEvents {
 
 		arrow.retarget(victim, deflectionLevel, deflectionLevel, 0.0);
 		return true;
+	}
+
+
+	public static void onEntityTick(MyEntity entity) {
+
 	}
 
 	/**

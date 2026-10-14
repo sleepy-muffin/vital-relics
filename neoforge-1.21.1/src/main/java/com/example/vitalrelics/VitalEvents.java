@@ -1,7 +1,8 @@
 package com.example.vitalrelics;
 
 import com.example.vitalrelics.common.*;
-import com.example.vitalrelics.platform.RelicMining;
+import com.example.vitalrelics.platform.*;
+import net.minecraft.world.entity.Entity;
 import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 
@@ -9,9 +10,6 @@ import com.example.vitalrelics.common.platform.MyDamageSource;
 import com.example.vitalrelics.common.platform.MyLivingEntity;
 import com.example.vitalrelics.common.relics.Relic;
 import com.example.vitalrelics.common.relics.Loader;
-import com.example.vitalrelics.platform.NeoAbstractArrow;
-import com.example.vitalrelics.platform.NeoDamageSource;
-import com.example.vitalrelics.platform.NeoLivingEntity;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -357,6 +355,16 @@ public final class VitalEvents {
 				new NeoLivingEntity(owner),
 				gatherRelics(owner),
 				server.getTickCount());
+	}
+
+	@SubscribeEvent
+	public static void onEntityTick(final EntityTickEvent.Pre event) {
+        Entity entity = event.getEntity();
+        if (entity.level().isClientSide()) {
+			return;
+		}
+
+		MyEvents.onEntityTick(new NeoForgeEntity(entity));
 	}
 
 	@SubscribeEvent

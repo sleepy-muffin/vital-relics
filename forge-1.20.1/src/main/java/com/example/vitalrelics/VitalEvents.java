@@ -1,16 +1,16 @@
 package com.example.vitalrelics;
 
 import com.example.vitalrelics.common.*;
-import com.example.vitalrelics.platform.RelicMining;
+import com.example.vitalrelics.platform.*;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.level.BlockEvent;
 
 import com.example.vitalrelics.common.platform.MyDamageSource;
 import com.example.vitalrelics.common.platform.MyLivingEntity;
 import com.example.vitalrelics.common.relics.Relic;
 import com.example.vitalrelics.common.relics.Loader;
-import com.example.vitalrelics.platform.ForgeAbstractArrow;
-import com.example.vitalrelics.platform.ForgeDamageSource;
-import com.example.vitalrelics.platform.ForgeLivingEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -138,6 +138,24 @@ public final class VitalEvents {
 		Scheduler.INSTANCE().serverTick(
 				event.getServer().getTickCount()
 		);
+	}
+
+	@SubscribeEvent
+	public static void onLevelTick(
+			final TickEvent.LevelTickEvent event
+	) {
+		if (event.phase != TickEvent.Phase.END ||
+				event.level.isClientSide()) {
+			return;
+		}
+
+		if (!(event.level instanceof ServerLevel level))
+			return;
+
+		for (final Entity entity : level.getAllEntities()) {
+
+			MyEvents.onEntityTick(new ForgeEntity(entity));
+		}
 	}
 
 	@SubscribeEvent

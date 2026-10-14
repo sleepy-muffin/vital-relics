@@ -872,7 +872,8 @@
       "texture": "icy_feathered_arrow.png",
       "rarity": "epic",
       "passive_skills": {
-        "empowered_arrows": 1.5,
+        "thrusting_arrows": 1.5,
+        "empowered_arrows": 1.25,
         "gravityless_arrows": 10
       }
     },

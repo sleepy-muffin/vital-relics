@@ -981,7 +981,7 @@
           "modifier": 0.84
         },
         "invulnerable_time_taken": {
-          "flat": 10
+          "flat": 5
         }
       }
     },

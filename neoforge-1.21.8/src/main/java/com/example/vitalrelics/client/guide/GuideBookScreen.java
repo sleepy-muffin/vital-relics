@@ -52,7 +52,11 @@ public class GuideBookScreen extends Screen {
 	@Override
 	public void render(final GuiGraphics graphics, final int mouseX,
 			final int mouseY, final float partialTick) {
-		renderBackground(graphics, mouseX, mouseY, partialTick);
+
+		// WARNING
+		// This cannot be called on 1.21.8 here
+		// renderBackground(graphics, mouseX, mouseY, partialTick);
+		// Otherwise the game will crash immediately on opening the guide book.
 		super.render(graphics, mouseX, mouseY, partialTick);
 		view.render(canvas(graphics));
 	}

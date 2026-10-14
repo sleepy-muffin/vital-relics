@@ -47,3 +47,15 @@ Vital Relicsは、動的なレリック（遺物）のクラフトレシピや�
 これにより、設定されたレリックがダンジョンのチェストの戦利品に5%の確率で追加されます。ルートテーブルには、`minecraft:chests/stronghold_library`や`minecraft:entities/zombie`といったMinecraftのリソースロケーションが使用されます。
 
 ルートテーブルが生成される際、Vital Relicsは設定されたルールを確認し、条件に一致するレリックのエントリを追加します。
+
+オプションの `biome` は、ルールを単一のバイオームに限定します。バイオームは、エンティティの死亡位置など、戦利品が生成される場所で判定されます。
+
+```json
+{
+"table": "minecraft:entities/wither",
+"chance": 0.5,
+"biome": "minecraft:cherry_grove"
+}
+```
+
+これにより、設定されたレリックがウィザーのドロップに50%の確率で追加されますが、ウィザーがサクラの林で倒された場合に限られます。

@@ -184,6 +184,7 @@
   "guide.vitalrelics.acquisition.unavailable": "通常のサバイバルでは入手できません",
   "guide.vitalrelics.acquisition.none": "入手方法が設定されていません",
   "guide.vitalrelics.acquisition.loot": "戦利品：%s（%s）",
+  "guide.vitalrelics.acquisition.loot_biome": "戦利品：%s（%s）（%s にて）",
   "guide.vitalrelics.acquisition.crafting": "クラフト：%s",
   "guide.vitalrelics.acquisition.output": "  作成数：%s",
   "guide.vitalrelics.title": "Vital Relics",

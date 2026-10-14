@@ -48,3 +48,15 @@ Vital Relics 支持动态的遗物（relic）合成配方，并允许将遗物�
 这将把配置好的遗物以 5% 的几率添加到地牢宝箱的战利品中。战利品表使用 Minecraft 资源定位符（Resource Location），例如 `minecraft:chests/stronghold_library` 和 `minecraft:entities/zombie`。
 
 当生成战利品时，Vital Relics 会检查配置的规则并添加匹配的遗物条目。
+
+可选的 `biome` 可将规则限制在单个生物群系中。生物群系会在战利品生成的位置（例如实体的死亡位置）进行判定。
+
+```json
+{
+  "table": "minecraft:entities/wither",
+  "chance": 0.5,
+  "biome": "minecraft:cherry_grove"
+}
+```
+
+这会将配置好的遗物以 50% 的几率添加到凋灵的掉落物中，但仅限凋灵在樱花树林中被击杀时。

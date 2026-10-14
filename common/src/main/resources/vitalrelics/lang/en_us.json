@@ -184,6 +184,7 @@
   "guide.vitalrelics.acquisition.unavailable": "Not available through normal survival acquisition",
   "guide.vitalrelics.acquisition.none": "No configured acquisition method",
   "guide.vitalrelics.acquisition.loot": "Loot: %s (%s)",
+  "guide.vitalrelics.acquisition.loot_biome": "Loot: %s (%s) in %s",
   "guide.vitalrelics.acquisition.crafting": "Crafting: %s",
   "guide.vitalrelics.acquisition.output": "  Output: %s",
   "guide.vitalrelics.title": "Vital Relics",

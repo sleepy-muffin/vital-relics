@@ -372,6 +372,17 @@ public class GuidePage {
 			addRecipe(section, entry.recipe, ingredientName);
 
 		for (final Acquisition.Data.Loot loot : entry.loot) {
+			if (loot.biome != null) {
+				section.lines.add(trf(
+						"guide.vitalrelics.acquisition.loot_biome",
+						"Loot: %s (%s) in %s",
+						humanizeIdentifier(loot.table),
+						formatPercent(loot.chance),
+						humanizeIdentifier(loot.biome)
+				));
+				continue;
+			}
+
 			section.lines.add(trf(
 					"guide.vitalrelics.acquisition.loot", "Loot: %s (%s)",
 					humanizeIdentifier(loot.table),

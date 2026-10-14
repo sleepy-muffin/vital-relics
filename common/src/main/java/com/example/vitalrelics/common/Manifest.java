@@ -19,7 +19,7 @@ public class Manifest {
 	// Configurations with "customized": false are updated automatically; configurations
 	// with "customized": true must never be overwritten automatically.
 	public static final String OPT_RELICS_VER = "0.6.7";
-	public static final String OPT_RECIPES_VER = "0.6.2";
+	public static final String OPT_RECIPES_VER = "0.6.3";
 	public static final String OPT_LANG_VER = "0.6.2";
 	public static final String OPT_MATERIAL_VER = "0.1.0";
 

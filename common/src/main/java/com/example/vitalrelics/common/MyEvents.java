@@ -93,6 +93,18 @@ public final class MyEvents {
 					if (destination == null)
 						continue;
 
+					// Only affect entities that are actually above a surface.
+					final double heightAboveGround = target.y() - destination.y();
+
+					if (!Double.isFinite(heightAboveGround) ||
+							heightAboveGround <= 2.0D) {
+						continue;
+					}
+
+					// Apply a stronger pulse to entities farther from the ground.
+					final double pulse = Math.max(0.18D, 0.18D + heightAboveGround * 2.0D);
+
+					target.push(0.0D, -pulse, 0.0D);
 					target.moveTo(destination.x(), destination.y(), destination.z());
 					target.markMovementChanged();
 				}

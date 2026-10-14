@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "0.6.2",
+    "version": "0.6.3",
     "customized": false
   },
   "recipes": {
@@ -1546,6 +1546,13 @@
       {
         "table": "minecraft:chests/ancient_city",
         "chance": 0.03
+      }
+    ],
+    "cherry_cross": [
+      {
+        "table": "minecraft:entities/wither",
+        "chance": 0.5,
+        "biome": "minecraft:cherry_grove"
       }
     ]
   }

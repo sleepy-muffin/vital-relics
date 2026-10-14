@@ -971,6 +971,11 @@
       "immune_to_effects": [
         "slowness"
       ],
+      "properties": {
+        "knockback_resistance": {
+          "add": 1.0
+        }
+      },
       "callbacks": {
         "damage_taken": {
           "modifier": 0.84

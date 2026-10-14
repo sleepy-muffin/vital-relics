@@ -176,6 +176,7 @@
   "guide.vitalrelics.acquisition.unavailable": "无法通过正常生存模式获取",
   "guide.vitalrelics.acquisition.none": "未配置获取方式",
   "guide.vitalrelics.acquisition.loot": "战利品：%s（%s）",
+  "guide.vitalrelics.acquisition.loot_biome": "战利品：%s（%s）于 %s",
   "guide.vitalrelics.acquisition.crafting": "合成：%s",
   "guide.vitalrelics.acquisition.output": "  产物数量：%s",
   "guide.vitalrelics.title": "生命遗物",

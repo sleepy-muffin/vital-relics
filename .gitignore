@@ -1,15 +1,15 @@
 # ==============================
 # Gradle
 # ==============================
-.gradle/
-**/.gradle/
+/.gradle/
+/*/.gradle/
 .gradlew.bat
 
 # Build outputs
 build/
-**/build/
+/*/build/
 out/
-**/out/
+/*/out/
 
 # Keep the Gradle wrapper
 !gradle/wrapper/gradle-wrapper.jar
@@ -18,11 +18,14 @@ out/
 # ==============================
 # IntelliJ IDEA
 # ==============================
-.idea/
-.run/
+/.idea/
+/.run/
 *.iml
 *.ipr
 *.iws
+
+/*/.eclipse/
+/*/bin/
 
 # Eclipse
 .classpath
@@ -33,10 +36,8 @@ out/
 # ==============================
 # Minecraft development runtime
 # ==============================
-run/
-**/run/
-run-data/
-**/run-data/
+/*/run/
+/*/run-data/
 
 # Minecraft generated/runtime files
 logs/
@@ -63,6 +64,7 @@ Thumbs.db
 *~
 *.swp
 *.swo
+
 
 
 # ==============================

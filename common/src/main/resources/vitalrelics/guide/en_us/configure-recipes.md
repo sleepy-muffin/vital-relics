@@ -47,3 +47,15 @@ Example
 This adds the configured relic to dungeon chest loot with a 5% chance. Loot tables use Minecraft resource locations such as `minecraft:chests/stronghold_library` and `minecraft:entities/zombie`.
 
 When a loot table is generated, Vital Relics checks configured rules and adds matching relic entries.
+
+An optional `biome` limits the rule to a single biome. The biome is checked where the loot is generated, such as the death position of an entity.
+
+```json
+{
+  "table": "minecraft:entities/wither",
+  "chance": 0.5,
+  "biome": "minecraft:cherry_grove"
+}
+```
+
+This adds the configured relic to the Wither's drops with a 50% chance, but only when the Wither is killed in a cherry grove.

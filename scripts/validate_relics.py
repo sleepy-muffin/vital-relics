@@ -472,6 +472,20 @@ def validate_loot(
                     "greater than 0 and at most 1"
                 )
 
+            biome = rule.get("biome")
+
+            if biome is not None:
+                biome = require_nonempty_string(
+                    biome,
+                    f"{path}: loot.{relic_id}[{index}].biome",
+                )
+
+                if not LOOT_TABLE_PATTERN.fullmatch(biome):
+                    fail(
+                        f"{path}: loot.{relic_id}[{index}].biome has invalid "
+                        f"resource ID {biome!r}"
+                    )
+
         if relic_id in valid_targets:
             loot_targets.add(relic_id)
 

@@ -138,6 +138,13 @@ public class Acquisition {
 				if (rule.chance < 0.0 || rule.chance > 1.0)
 					throw new IllegalArgumentException("Loot chance must be between 0 and 1");
 
+				if (map.get("biome") instanceof String biome) {
+					if (biome.isBlank())
+						throw new IllegalArgumentException("Loot rule 'biome' must not be blank");
+
+					rule.biome = biome;
+				}
+
 				out.add(rule);
 			}
 
@@ -212,6 +219,7 @@ public class Acquisition {
 		public static class Loot {
 			public String table;
 			public double chance;
+			public String biome;
 		}
 	}
 }

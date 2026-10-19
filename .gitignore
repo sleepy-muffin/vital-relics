@@ -38,6 +38,7 @@ out/
 # ==============================
 /*/run/
 /*/run-data/
+/*/run-gametest/
 
 # Minecraft generated/runtime files
 logs/

@@ -82,6 +82,28 @@ Which enemies can receive each relic—and how frequently they appear—can be c
 *   **JEI** — recipe integration
 *   **Touhou Little Maid** — optional integration
 
+## Development
+
+Vital Relics ships a small local test harness so a new Minecraft/loader version can be
+validated without booting the game and clicking through it by hand.
+
+*   **Unit tests** (no game required) live in `common/src/test/java` and run with:
+
+    ```bash
+    cd common && ./gradlew test
+    ```
+
+*   **GameTests** (a real, headless server) live in each loader module's
+    `com.example.vitalrelics.gametest` package and run with:
+
+    ```bash
+    cd <module> && ./gradlew runGameTestServer
+    ```
+
+    They use a dedicated `run-gametest/` directory, so mods placed in `run/mods/`
+    for manual play cannot break the automated run. `forge-1.20.1` must be run with
+    Java 17, because its Gradle version does not support newer JDKs.
+
 ## Feedback and Bug Reports
 
 Vital Relics is actively developed.

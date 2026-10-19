@@ -1,0 +1,4 @@
+
+rootProject.name = "vitalrelics-neoforge-26.3"
+
+includeBuild("../common")

@@ -1,0 +1,19 @@
+{
+  "lsp": {
+    "jdtls": {
+      "initialization_options": {
+        "settings": {
+          "java": {
+            "import": {
+              "gradle": {
+                "java": {
+                  "home": "/home/menv/opt/jdk-17.0.20.1+1"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

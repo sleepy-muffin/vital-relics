@@ -54,6 +54,10 @@ neoForge {
         gameTestServer {
             type = "gameTestServer"
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+
+            // Use a dedicated directory so that mods dropped into `run/mods` for manual
+            // testing cannot break the headless test run.
+            gameDirectory.set(file("run-gametest"))
         }
 
         clientData {

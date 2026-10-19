@@ -10,6 +10,7 @@ import com.example.vitalrelics.common.relics.Acquisition;
 import com.example.vitalrelics.common.relics.Loader;
 import com.example.vitalrelics.common.materials.MaterialLoader;
 import com.example.vitalrelics.common.relics.Translations;
+import com.example.vitalrelics.gametest.VitalGameTests;
 import com.example.vitalrelics.network.NeoNetwork;
 import com.example.vitalrelics.platform.NeoRuntimeUtils;
 import com.mojang.logging.LogUtils;
@@ -82,6 +83,7 @@ public class VitalRelics
 
 		modEventBus.addListener(this::commonSetup);
 		modEventBus.addListener(NeoNetwork::registerPayloadHandlers);
+		modEventBus.addListener(VitalGameTests::register);
 
 		BLOCKS.register(modEventBus);
 		ITEMS.register(modEventBus);

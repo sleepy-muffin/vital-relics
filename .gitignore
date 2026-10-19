@@ -2,6 +2,7 @@
 # Gradle
 # ==============================
 /.gradle/
+/.zed/
 /*/.gradle/
 .gradlew.bat
 

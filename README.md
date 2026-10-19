@@ -75,6 +75,7 @@ Which enemies can receive each relic—and how frequently they appear—can be c
 *   **Minecraft 1.21.1 — NeoForge**
 *   **Minecraft 1.21.8 — NeoForge**
 *   **Minecraft 26.2 — NeoForge**
+*   **Minecraft 26.3 — NeoForge**
 
 ## Integrations
 
@@ -108,7 +109,7 @@ validated without booting the game and clicking through it by hand.
 
 Vital Relics is actively developed.
 
-If you encounter a reproducible bug, compatibility problem, or crash, please report it through the [GitHub Issues page](https://github.com/leaked32/Vital-Relics/issues) with relevant logs and configuration details when possible.
+If you encounter a reproducible bug, compatibility problem, or crash, please report it through the [GitHub Issues page](https://github.com/sleepy-muffin/vital-relics/issues) with relevant logs and configuration details when possible.
 
 ## Screenshots
 

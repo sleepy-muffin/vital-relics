@@ -22,6 +22,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # For workflow_dispatch, build the requested tag rather than the branch HEAD.
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Validate relics configuration
         run: python3 scripts/validate_relics.py
@@ -87,7 +90,7 @@ jobs:
 
 
       # ------------------------------
-      # NeoForge 26.2
+      # NeoForge 26.2, 26.3
       # ------------------------------
 
       - name: Set up JDK 25
@@ -98,6 +101,9 @@ jobs:
 
       - name: Build NeoForge 26.2
         run: cd neoforge-26.2 && ./gradlew build -Pmod_version="${VERSION}"
+
+      - name: Build NeoForge 26.3
+        run: cd neoforge-26.3 && ./gradlew build -Pmod_version="${VERSION}"
 
       # ------------------------------
       # Verify common classes are bundled
@@ -175,6 +181,24 @@ jobs:
           jar tf "$NEOFORGE_JAR" \
             | grep "com/example/vitalrelics/common/relics/Loader.class"
 
+      - name: Verify NeoForge 26.3 JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          NEOFORGE_JAR=$(find neoforge-26.3/build/libs \
+            -maxdepth 1 -type f -name "*.jar" \
+            ! -name "*-sources.jar" \
+            ! -name "*-dev.jar" \
+            | head -n 1)
+
+          test -n "$NEOFORGE_JAR"
+
+          echo "NeoForge 26.3 JAR: $NEOFORGE_JAR"
+
+          jar tf "$NEOFORGE_JAR" \
+            | grep "com/example/vitalrelics/common/relics/Loader.class"
+
       # ------------------------------
       # Prepare release artifacts
       # ------------------------------
@@ -210,10 +234,17 @@ jobs:
             ! -name "*-dev.jar" \
             | head -n 1)
 
+          NEOFORGE_263_JAR=$(find neoforge-26.3/build/libs \
+            -maxdepth 1 -type f -name "*.jar" \
+            ! -name "*-sources.jar" \
+            ! -name "*-dev.jar" \
+            | head -n 1)
+
           test -n "$FORGE_JAR"
           test -n "$NEOFORGE_1211_JAR"
           test -n "$NEOFORGE_1218_JAR"
           test -n "$NEOFORGE_262_JAR"
+          test -n "$NEOFORGE_263_JAR"
 
           cp "$FORGE_JAR" \
             "release/vitalrelics-forge-1.20.1-${VERSION}.jar"
@@ -226,6 +257,9 @@ jobs:
 
           cp "$NEOFORGE_262_JAR" \
             "release/vitalrelics-neoforge-26.2-${VERSION}.jar"
+
+          cp "$NEOFORGE_263_JAR" \
+            "release/vitalrelics-neoforge-26.3-${VERSION}.jar"
 
       # ------------------------------
       # Diagnostics
@@ -251,6 +285,7 @@ jobs:
             release/vitalrelics-neoforge-1.21.1-${{ env.VERSION }}.jar
             release/vitalrelics-neoforge-1.21.8-${{ env.VERSION }}.jar
             release/vitalrelics-neoforge-26.2-${{ env.VERSION }}.jar
+            release/vitalrelics-neoforge-26.3-${{ env.VERSION }}.jar
 
       # ------------------------------
       # Forge / NeoForge update checker
@@ -274,7 +309,7 @@ jobs:
           version = os.environ["VERSION"]
           data = json.loads(path.read_text())
 
-          for minecraft in ("1.20.1", "1.21.1", "1.21.8", "26.2"):
+          for minecraft in ("1.20.1", "1.21.1", "1.21.8", "26.2", "26.3"):
               data.setdefault(minecraft, {})[version] = f"Vital Relics v{version}"
               data.setdefault("promos", {})[f"{minecraft}-latest"] = version
               data["promos"][f"{minecraft}-recommended"] = version

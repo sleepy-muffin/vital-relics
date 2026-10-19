@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "item": "minecraft:book"
-    },
-    {
-      "item": "minecraft:paper"
-    }
+    "minecraft:book",
+    "minecraft:paper"
   ],
   "result": {
     "id": "vitalrelics:guide_book",

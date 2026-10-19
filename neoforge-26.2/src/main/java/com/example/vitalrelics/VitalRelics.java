@@ -91,7 +91,8 @@ public class VitalRelics
 		modEventBus.addListener(this::commonSetup);
 		modEventBus.addListener(this::modifyDefaultComponents);
 		modEventBus.addListener(NeoNetwork::registerPayloadHandlers);
-		modEventBus.addListener(VitalGameTests::register);
+		modEventBus.addListener(VitalGameTests::registerFunctions);
+		modEventBus.addListener(VitalGameTests::registerTests);
 
 		BLOCKS.register(modEventBus);
 		ITEMS.register(modEventBus);

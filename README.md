@@ -8,7 +8,7 @@ Vital Relics is intentionally designed to be changed.
 
 Project Documentation
 
-[English](https://github.com/sleepy-muffin/vital-relics/blob/main/common/src/main/resources/vitalrelics/guide/en_us/README.md) |
+[English](https://github.com/sleepy-muffin/vital-relics/blob/main/common/src/main/resources/vitalrelics/guide/en_us/index.md) |
 [日本語](https://github.com/sleepy-muffin/vital-relics/blob/main/common/src/main/resources/vitalrelics/guide/ja_jp/index.md) |
 [简体中文](https://github.com/sleepy-muffin/vital-relics/blob/main/common/src/main/resources/vitalrelics/guide/zh_cn/index.md) |
 [繁體中文](https://github.com/sleepy-muffin/vital-relics/blob/main/common/src/main/resources/vitalrelics/guide/zh_tw/index.md)

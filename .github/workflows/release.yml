@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag, e.g. v0.7.5"
+        description: "New release tag, e.g. v0.7.26 (built from the selected branch)"
         required: true
         type: string
 
@@ -22,9 +22,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          # For workflow_dispatch, build the requested tag rather than the branch HEAD.
-          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Verify module layout
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # A release must be built from a ref that contains every module. This catches
+          # dispatches against old tags (v0.7.25 predates neoforge-26.3) as well as tags
+          # created at an older commit, instead of failing later with a bare "cd" error.
+          missing=0
+          for module in forge-1.20.1 neoforge-1.21.1 neoforge-1.21.8 neoforge-26.2 neoforge-26.3; do
+            if [ ! -x "$module/gradlew" ]; then
+              echo "::error::Module '$module' is missing from $GITHUB_REF"
+              missing=1
+            fi
+          done
+
+          exit "$missing"
 
       - name: Validate relics configuration
         run: python3 scripts/validate_relics.py
@@ -114,13 +129,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          FORGE_JAR=$(find forge-1.20.1/build/libs \
-            -maxdepth 1 -type f -name "*.jar" \
-            ! -name "*-sources.jar" \
-            ! -name "*-dev.jar" \
-            | head -n 1)
+          FORGE_JAR="forge-1.20.1/build/libs/vitalrelics-${VERSION}.jar"
 
-          test -n "$FORGE_JAR"
+          test -f "$FORGE_JAR"
 
           echo "Forge JAR: $FORGE_JAR"
 
@@ -132,13 +143,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          NEOFORGE_JAR=$(find neoforge-1.21.1/build/libs \
-            -maxdepth 1 -type f -name "*.jar" \
-            ! -name "*-sources.jar" \
-            ! -name "*-dev.jar" \
-            | head -n 1)
+          NEOFORGE_JAR="neoforge-1.21.1/build/libs/vitalrelics-${VERSION}.jar"
 
-          test -n "$NEOFORGE_JAR"
+          test -f "$NEOFORGE_JAR"
 
           echo "NeoForge 1.21.1 JAR: $NEOFORGE_JAR"
 
@@ -150,13 +157,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          NEOFORGE_JAR=$(find neoforge-1.21.8/build/libs \
-            -maxdepth 1 -type f -name "*.jar" \
-            ! -name "*-sources.jar" \
-            ! -name "*-dev.jar" \
-            | head -n 1)
+          NEOFORGE_JAR="neoforge-1.21.8/build/libs/vitalrelics-${VERSION}.jar"
 
-          test -n "$NEOFORGE_JAR"
+          test -f "$NEOFORGE_JAR"
 
           echo "NeoForge 1.21.8 JAR: $NEOFORGE_JAR"
 
@@ -168,13 +171,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          NEOFORGE_JAR=$(find neoforge-26.2/build/libs \
-            -maxdepth 1 -type f -name "*.jar" \
-            ! -name "*-sources.jar" \
-            ! -name "*-dev.jar" \
-            | head -n 1)
+          NEOFORGE_JAR="neoforge-26.2/build/libs/vitalrelics-${VERSION}.jar"
 
-          test -n "$NEOFORGE_JAR"
+          test -f "$NEOFORGE_JAR"
 
           echo "NeoForge 26.2 JAR: $NEOFORGE_JAR"
 
@@ -186,13 +185,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          NEOFORGE_JAR=$(find neoforge-26.3/build/libs \
-            -maxdepth 1 -type f -name "*.jar" \
-            ! -name "*-sources.jar" \
-            ! -name "*-dev.jar" \
-            | head -n 1)
+          NEOFORGE_JAR="neoforge-26.3/build/libs/vitalrelics-${VERSION}.jar"
 
-          test -n "$NEOFORGE_JAR"
+          test -f "$NEOFORGE_JAR"
 
           echo "NeoForge 26.3 JAR: $NEOFORGE_JAR"
 
@@ -210,41 +205,17 @@ jobs:
 
           mkdir -p release
 
-          FORGE_JAR=$(find forge-1.20.1/build/libs \
-            -maxdepth 1 -type f -name "*.jar" \
-            ! -name "*-sources.jar" \
-            ! -name "*-dev.jar" \
-            | head -n 1)
+          FORGE_JAR="forge-1.20.1/build/libs/vitalrelics-${VERSION}.jar"
+          NEOFORGE_1211_JAR="neoforge-1.21.1/build/libs/vitalrelics-${VERSION}.jar"
+          NEOFORGE_1218_JAR="neoforge-1.21.8/build/libs/vitalrelics-${VERSION}.jar"
+          NEOFORGE_262_JAR="neoforge-26.2/build/libs/vitalrelics-${VERSION}.jar"
+          NEOFORGE_263_JAR="neoforge-26.3/build/libs/vitalrelics-${VERSION}.jar"
 
-          NEOFORGE_1211_JAR=$(find neoforge-1.21.1/build/libs \
-            -maxdepth 1 -type f -name "*.jar" \
-            ! -name "*-sources.jar" \
-            ! -name "*-dev.jar" \
-            | head -n 1)
-
-          NEOFORGE_1218_JAR=$(find neoforge-1.21.8/build/libs \
-            -maxdepth 1 -type f -name "*.jar" \
-            ! -name "*-sources.jar" \
-            ! -name "*-dev.jar" \
-            | head -n 1)
-
-          NEOFORGE_262_JAR=$(find neoforge-26.2/build/libs \
-            -maxdepth 1 -type f -name "*.jar" \
-            ! -name "*-sources.jar" \
-            ! -name "*-dev.jar" \
-            | head -n 1)
-
-          NEOFORGE_263_JAR=$(find neoforge-26.3/build/libs \
-            -maxdepth 1 -type f -name "*.jar" \
-            ! -name "*-sources.jar" \
-            ! -name "*-dev.jar" \
-            | head -n 1)
-
-          test -n "$FORGE_JAR"
-          test -n "$NEOFORGE_1211_JAR"
-          test -n "$NEOFORGE_1218_JAR"
-          test -n "$NEOFORGE_262_JAR"
-          test -n "$NEOFORGE_263_JAR"
+          test -f "$FORGE_JAR"
+          test -f "$NEOFORGE_1211_JAR"
+          test -f "$NEOFORGE_1218_JAR"
+          test -f "$NEOFORGE_262_JAR"
+          test -f "$NEOFORGE_263_JAR"
 
           cp "$FORGE_JAR" \
             "release/vitalrelics-forge-1.20.1-${VERSION}.jar"
@@ -296,9 +267,10 @@ jobs:
         run: |
           set -euo pipefail
 
+          # The checkout above may be a shallow tag checkout, where `git fetch origin main`
+          # does not create a local `main` branch. Reset onto the fetched main explicitly.
           git fetch origin main
-          git checkout main
-          git pull --ff-only origin main
+          git checkout -B main FETCH_HEAD
 
           python3 - <<'PY'
           import json

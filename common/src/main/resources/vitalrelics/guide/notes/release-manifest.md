@@ -294,7 +294,7 @@ Do not rely solely on a general repository scan. Review each feature introduced 
 
 ### Critical — must pass
 
-* Both loaders build.
+* All supported loaders build.
 * Game launches.
 * Worlds load.
 * Configuration loads safely.
@@ -334,6 +334,12 @@ Reviewer:
 Forge 1.20.1: PASS / FAIL / NOT TESTED
 
 NeoForge 1.21.1: PASS / FAIL / NOT TESTED
+
+NeoForge 1.21.8: PASS / FAIL / NOT TESTED
+
+NeoForge 26.2: PASS / FAIL / NOT TESTED
+
+NeoForge 26.3: PASS / FAIL / NOT TESTED
 
 Configuration: PASS / FAIL / NOT TESTED
 

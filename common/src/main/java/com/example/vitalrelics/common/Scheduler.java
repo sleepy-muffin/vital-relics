@@ -211,10 +211,9 @@ public class Scheduler {
 			return null;
 		}
 
-		final int current = Math.max(
-				0,
-				spellIds.indexOf(state.selectedSpellId)
-		);
+		final int current = state.selectedSpellId == null
+				? 0
+				: Math.max(0, spellIds.indexOf(state.selectedSpellId));
 
 		state.selectedSpellId = spellIds.get(Math.floorMod(
 				current + direction,
@@ -237,7 +236,8 @@ public class Scheduler {
 			return null;
 		}
 
-		if (!spellIds.contains(state.selectedSpellId))
+		if (state.selectedSpellId == null ||
+				!spellIds.contains(state.selectedSpellId))
 			state.selectedSpellId = spellIds.get(0);
 
 		SPELL_STATE_LIST.put(uuid, currentTickCount, state);

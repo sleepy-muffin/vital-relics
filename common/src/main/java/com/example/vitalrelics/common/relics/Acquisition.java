@@ -42,16 +42,26 @@ public class Acquisition {
 				Manifest.OPT_RECIPES_VER
 		);
 
-		instance.data.recipes.clear();
-		instance.data.loot.clear();
-		instance.data.undefined.clear();
-
-		instance.parseRecipes(root.get("recipes"));
-		instance.parseLoot(root.get("loot"));
-		instance.parseUndefined(root.get("undefined"));
+		parseInto(instance.data, root);
 	}
 
-	private void parseRecipes(final Object raw) {
+	// Kept separate from the singleton so the parser can be exercised directly.
+	static void parseInto(
+			final Data data,
+			final Map<String, Object> root) {
+
+		data.recipes.clear();
+		data.loot.clear();
+		data.undefined.clear();
+
+		parseRecipes(data, root.get("recipes"));
+		parseLoot(data, root.get("loot"));
+		parseUndefined(data, root.get("undefined"));
+	}
+
+	private static void parseRecipes(
+			final Data data,
+			final Object raw) {
 		if (raw == null)
 			return;
 
@@ -105,7 +115,9 @@ public class Acquisition {
 		}
 	}
 
-	private void parseLoot(final Object raw) {
+	private static void parseLoot(
+			final Data data,
+			final Object raw) {
 		if (raw == null)
 			return;
 
@@ -152,7 +164,10 @@ public class Acquisition {
 		}
 	}
 
-	private void parseUndefined(final Object raw) {
+	private static void parseUndefined(
+			final Data data,
+			final Object raw) {
+
 		parseStringList(data.undefined, raw);
 	}
 

@@ -333,5 +333,17 @@
   "tooltip.vitalrelics.cherry_anklet": "A spring-laced anklet that turns every jump into a graceful bound.",
 
   "item.vitalrelics.tidebloom_anklet": "Tidebloom Anklet",
-  "tooltip.vitalrelics.tidebloom_anklet": "A tide-kissed anklet that carries you swiftly whenever you break into a sprint."
+  "tooltip.vitalrelics.tidebloom_anklet": "A tide-kissed anklet that carries you swiftly whenever you break into a sprint.",
+
+  "item.vitalrelics.blossom_anklet": "Blossom Anklet",
+  "tooltip.vitalrelics.blossom_anklet": "A petal-woven anklet that lends a light, springy step.",
+
+  "item.vitalrelics.petalstep_anklet": "Petalstep Anklet",
+  "tooltip.vitalrelics.petalstep_anklet": "Each landing scatters petals, softening the fall.",
+
+  "item.vitalrelics.ripple_anklet": "Ripple Anklet",
+  "tooltip.vitalrelics.ripple_anklet": "A slender anklet that hums with a gentle current.",
+
+  "item.vitalrelics.tidecaller_anklet": "Tidecaller Anklet",
+  "tooltip.vitalrelics.tidecaller_anklet": "The tide quickens your stride and your strikes."
 }

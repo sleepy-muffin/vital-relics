@@ -333,5 +333,17 @@
   "tooltip.vitalrelics.cherry_anklet": "跳ぶたびに優雅な跳躍をもたらす、弾みを秘めたアンクレット。",
 
   "item.vitalrelics.tidebloom_anklet": "潮花のアンクレット",
-  "tooltip.vitalrelics.tidebloom_anklet": "駆け出した者を潮の流れのように素早く運ぶ、潮に祝福されたアンクレット。"
+  "tooltip.vitalrelics.tidebloom_anklet": "駆け出した者を潮の流れのように素早く運ぶ、潮に祝福されたアンクレット。",
+
+  "item.vitalrelics.blossom_anklet": "花咲のアンクレット",
+  "tooltip.vitalrelics.blossom_anklet": "花びらを編み込んだ、軽やかな跳躍を授けるアンクレット。",
+
+  "item.vitalrelics.petalstep_anklet": "花歩みのアンクレット",
+  "tooltip.vitalrelics.petalstep_anklet": "着地のたびに花びらが舞い、衝撃を和らげるアンクレット。",
+
+  "item.vitalrelics.ripple_anklet": "さざ波のアンクレット",
+  "tooltip.vitalrelics.ripple_anklet": "穏やかな流れを宿した、細やかなアンクレット。",
+
+  "item.vitalrelics.tidecaller_anklet": "潮呼びのアンクレット",
+  "tooltip.vitalrelics.tidecaller_anklet": "潮の満ち引きが歩みと打撃を速めるアンクレット。"
 }

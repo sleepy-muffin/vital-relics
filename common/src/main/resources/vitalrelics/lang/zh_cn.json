@@ -333,5 +333,17 @@
   "tooltip.vitalrelics.cherry_anklet": "由花朵编织而成的脚链，让每一步都充满弹性。",
 
   "item.vitalrelics.tidebloom_anklet": "潮花脚链",
-  "tooltip.vitalrelics.tidebloom_anklet": "沐浴潮汐祝福的脚链，让你起跑时如水流般迅捷。"
+  "tooltip.vitalrelics.tidebloom_anklet": "沐浴潮汐祝福的脚链，让你起跑时如水流般迅捷。",
+
+  "item.vitalrelics.blossom_anklet": "花绽脚链",
+  "tooltip.vitalrelics.blossom_anklet": "由花瓣编成的脚链，赋予轻盈的跳跃。",
+
+  "item.vitalrelics.petalstep_anklet": "踏花脚链",
+  "tooltip.vitalrelics.petalstep_anklet": "每次落地都有花瓣飞散，缓和冲击的脚链。",
+
+  "item.vitalrelics.ripple_anklet": "涟漪脚链",
+  "tooltip.vitalrelics.ripple_anklet": "萦绕柔和水流气息的纤细脚链。",
+
+  "item.vitalrelics.tidecaller_anklet": "唤潮脚链",
+  "tooltip.vitalrelics.tidecaller_anklet": "潮汐加快你的步伐与出手。"
 }

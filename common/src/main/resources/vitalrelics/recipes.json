@@ -959,6 +959,66 @@
         "K": "vitalrelics:epic_relic_core"
       },
       "count": 1
+    },
+    "blossom_anklet": {
+      "type": "shaped",
+      "pattern": [
+        "C C",
+        "SKS",
+        " P "
+      ],
+      "key": {
+        "C": "minecraft:cherry_leaves",
+        "S": "minecraft:string",
+        "P": "minecraft:pink_petals",
+        "K": "vitalrelics:uncommon_relic_core"
+      },
+      "count": 1
+    },
+    "petalstep_anklet": {
+      "type": "shaped",
+      "pattern": [
+        "C C",
+        "GKG",
+        " P "
+      ],
+      "key": {
+        "C": "minecraft:cherry_leaves",
+        "G": "minecraft:gold_nugget",
+        "P": "minecraft:pink_petals",
+        "K": "vitalrelics:rare_relic_core"
+      },
+      "count": 1
+    },
+    "ripple_anklet": {
+      "type": "shaped",
+      "pattern": [
+        "P P",
+        "SKS",
+        " C "
+      ],
+      "key": {
+        "P": "minecraft:prismarine_crystals",
+        "S": "minecraft:string",
+        "C": "minecraft:prismarine_shard",
+        "K": "vitalrelics:uncommon_relic_core"
+      },
+      "count": 1
+    },
+    "tidecaller_anklet": {
+      "type": "shaped",
+      "pattern": [
+        "P P",
+        "GKG",
+        " C "
+      ],
+      "key": {
+        "P": "minecraft:prismarine_crystals",
+        "G": "minecraft:gold_nugget",
+        "C": "minecraft:prismarine_shard",
+        "K": "vitalrelics:rare_relic_core"
+      },
+      "count": 1
     }
   },
   "loot": {
@@ -1553,6 +1613,46 @@
         "table": "minecraft:entities/wither",
         "chance": 0.5,
         "biome": "minecraft:cherry_grove"
+      }
+    ],
+    "blossom_anklet": [
+      {
+        "table": "minecraft:chests/village/village_plains_house",
+        "chance": 0.08
+      },
+      {
+        "table": "minecraft:chests/shipwreck_supply",
+        "chance": 0.06
+      }
+    ],
+    "petalstep_anklet": [
+      {
+        "table": "minecraft:chests/woodland_mansion",
+        "chance": 0.04
+      },
+      {
+        "table": "minecraft:chests/buried_treasure",
+        "chance": 0.04
+      }
+    ],
+    "ripple_anklet": [
+      {
+        "table": "minecraft:chests/shipwreck_supply",
+        "chance": 0.08
+      },
+      {
+        "table": "minecraft:chests/buried_treasure",
+        "chance": 0.05
+      }
+    ],
+    "tidecaller_anklet": [
+      {
+        "table": "minecraft:chests/stronghold_corridor",
+        "chance": 0.04
+      },
+      {
+        "table": "minecraft:chests/buried_treasure",
+        "chance": 0.04
       }
     ]
   }

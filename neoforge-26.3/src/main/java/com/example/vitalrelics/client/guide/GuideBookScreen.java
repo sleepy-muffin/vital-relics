@@ -85,7 +85,10 @@ public class GuideBookScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
-		return view.mouseClicked(event.x(), event.y(), event.button())
+		// Minecraft 26.3 reports mouse buttons 1-based (left = 1), while the shared
+		// guide view still expects the historical 0-based button ids.
+		final int button = event.button() - 1;
+		return view.mouseClicked(event.x(), event.y(), button)
 				|| super.mouseClicked(event, doubleClick);
 	}
 	@Override

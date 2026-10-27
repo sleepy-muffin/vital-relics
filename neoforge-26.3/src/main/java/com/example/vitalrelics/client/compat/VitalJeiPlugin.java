@@ -1,13 +1,14 @@
 package com.example.vitalrelics.client.compat;
 
+import com.example.vitalrelics.VitalRelics;
 import com.example.vitalrelics.common.Manifest;
 import com.example.vitalrelics.common.relics.Acquisition;
+import com.example.vitalrelics.common.relics.ItemIdAliases;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.recipe.vanilla.IJeiShapedRecipeBuilder;
 import mezz.jei.api.registration.IRecipeRegistration;
-import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -48,22 +49,45 @@ public final class VitalJeiPlugin implements IModPlugin {
 
 			final ItemStack output = itemStack(id, entry.getValue().count);
 
-			if (output.isEmpty())
+			if (output.isEmpty()) {
+				VitalRelics.LOGGER.warn(
+						"Skipping JEI recipe '{}': '{}' is not a registered item",
+						entry.getKey(), id
+				);
+
 				continue;
+			}
 
-			final CraftingRecipe recipe = switch (entry.getValue().type) {
-				case "shaped" -> shaped(registration, entry.getValue(), output);
-				case "shapeless" -> shapeless(entry.getValue(), output);
-				default -> null;
-			};
+			/*
+			 * A single malformed definition must not take down every recipe of
+			 * the mod: JEI only reports the failure and drops the whole batch.
+			 */
+			try {
+				final CraftingRecipe recipe = switch (entry.getValue().type) {
+					case "shaped" -> shaped(registration, entry.getValue(), output);
+					case "shapeless" -> shapeless(entry.getValue(), output);
+					default -> null;
+				};
 
-			if (recipe != null) {
+				if (recipe == null)
+					continue;
+
 				final ResourceKey<Recipe<?>> recipeKey =
 						ResourceKey.create(Registries.RECIPE, id);
 
 				recipes.add(new RecipeHolder<>(recipeKey, recipe));
+			} catch (final RuntimeException exception) {
+				VitalRelics.LOGGER.error(
+						"Skipping JEI recipe '{}': failed to build it",
+						entry.getKey(), exception
+				);
 			}
 		}
+
+		VitalRelics.LOGGER.info(
+				"Registering {} JEI crafting recipes from the recipe configuration",
+				recipes.size()
+		);
 
 		registration.addRecipes(RecipeTypes.CRAFTING, recipes);
 	}
@@ -80,8 +104,14 @@ public final class VitalJeiPlugin implements IModPlugin {
 				.getVanillaRecipeFactory()
 				.createShapedRecipeBuilder(CraftingBookCategory.MISC, outputDisplay);
 
-		for (final Map.Entry<String, String> entry : definition.key.entrySet())
-			builder.define(entry.getKey().charAt(0), ingredient(entry.getValue()));
+		for (final Map.Entry<String, String> entry : definition.key.entrySet()) {
+			final Ingredient ingredient = ingredient(entry.getValue());
+
+			if (ingredient == null)
+				return null;
+
+			builder.define(entry.getKey().charAt(0), ingredient);
+		}
 
 		for (final String row : definition.pattern)
 			builder.pattern(row);
@@ -93,9 +123,16 @@ public final class VitalJeiPlugin implements IModPlugin {
 			final Acquisition.Data.Crafting definition,
 			final ItemStack output) {
 
-		final List<Ingredient> ingredients = definition.ingredients.stream()
-				.map(VitalJeiPlugin::ingredient)
-				.toList();
+		final List<Ingredient> ingredients = new ArrayList<>();
+
+		for (final String itemId : definition.ingredients) {
+			final Ingredient ingredient = ingredient(itemId);
+
+			if (ingredient == null)
+				return null;
+
+			ingredients.add(ingredient);
+		}
 
 		return new ShapelessRecipe(
 				new Recipe.CommonInfo(false),
@@ -105,19 +142,33 @@ public final class VitalJeiPlugin implements IModPlugin {
 		);
 	}
 
+	/**
+	 * Resolves an ingredient through {@link ItemIdAliases}, so IDs that were
+	 * renamed by Minecraft still display on the versions that renamed them.
+	 *
+	 * @return the ingredient, or {@code null} when no candidate ID is registered
+	 */
 	private static Ingredient ingredient(final String itemId) {
-		if (itemId == null)
-			return Ingredient.of();
+		for (final String candidate : ItemIdAliases.candidates(itemId)) {
+			final Identifier id = Identifier.tryParse(candidate);
 
-		final Identifier id = Identifier.tryParse(itemId);
+			if (id == null)
+				continue;
 
-		if (id == null)
-			return Ingredient.of();
+			final Ingredient ingredient = BuiltInRegistries.ITEM
+					.get(id)
+					.map(holder -> Ingredient.of(holder.value()))
+					.orElse(null);
 
-		return BuiltInRegistries.ITEM
-				.get(id)
-				.map(holder -> Ingredient.of(holder.value()))
-				.orElseGet(Ingredient::of);
+			if (ingredient != null)
+				return ingredient;
+		}
+
+		VitalRelics.LOGGER.warn(
+				"Skipping JEI recipe: item ID '{}' is not registered", itemId
+		);
+
+		return null;
 	}
 
 	private static ItemStack itemStack(final Identifier id, final int count) {

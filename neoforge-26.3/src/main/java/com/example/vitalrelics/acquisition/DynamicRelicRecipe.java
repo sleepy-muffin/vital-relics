@@ -2,6 +2,7 @@ package com.example.vitalrelics.acquisition;
 
 import com.example.vitalrelics.VitalRelics;
 import com.example.vitalrelics.common.relics.Acquisition;
+import com.example.vitalrelics.common.relics.ItemIdAliases;
 import com.example.vitalrelics.common.Manifest;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -80,11 +81,11 @@ public final class DynamicRelicRecipe extends CustomRecipe {
 		for (int i = 0; i < input.size(); ++i) {
 			final ItemStack stack = input.getItem(i);
 			if (!stack.isEmpty())
-				actual.merge(itemId(stack), 1, Integer::sum);
+				actual.merge(ItemIdAliases.canonical(itemId(stack)), 1, Integer::sum);
 		}
 
 		for (final String id : recipe.ingredients)
-			expected.merge(id, 1, Integer::sum);
+			expected.merge(ItemIdAliases.canonical(id), 1, Integer::sum);
 
 		return actual.equals(expected);
 	}
@@ -123,7 +124,8 @@ public final class DynamicRelicRecipe extends CustomRecipe {
 
 				final String expected = recipe.key.get(String.valueOf(symbol));
 
-				if (expected == null || stack.isEmpty() || !expected.equals(itemId(stack)))
+				if (expected == null || stack.isEmpty() ||
+						!ItemIdAliases.matches(expected, itemId(stack)))
 					return false;
 			}
 		}

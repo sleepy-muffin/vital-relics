@@ -11,6 +11,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import java.util.List;
 
 /** Adapts the game's screen and drawing API to the shared guide view. */
@@ -30,9 +31,8 @@ public class GuideBookScreen extends Screen {
 		if (location == null || !BuiltInRegistries.ITEM.containsKey(location))
 			return null;
 
-		return BuiltInRegistries.ITEM
-				.get(location)
-				.getDescription()
+		return new ItemStack(BuiltInRegistries.ITEM.get(location))
+				.getHoverName()
 				.getString();
 	}
 

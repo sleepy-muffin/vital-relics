@@ -11,563 +11,611 @@ import java.util.UUID;
 @SuppressWarnings("unused")
 public final class MyEvents {
 
-	private MyEvents() {
-	}
+    private MyEvents() {
+    }
 
 	/*
 	CALLBACKS
 	 */
 
-	public static int onExperienceGain(
-			final MyLivingEntity player, final int amount,
-			final int experienceNeededForNextLevel
-	) {
-		MyUtils.requireValidEntity(player);
+    public static int onExperienceGain(
+            final MyLivingEntity player, final int amount,
+            final int experienceNeededForNextLevel
+    ) {
+        MyUtils.requireValidEntity(player);
 
-		if (amount <= 0 || experienceNeededForNextLevel <= 0)
-			return amount;
+        if (amount <= 0 || experienceNeededForNextLevel <= 0)
+            return amount;
 
-		final double level = Loader.levelOfSuchPassiveSkill(
-				MyRuntime.getRuntimeUtils().gatherRelics(player),
-				Relic.PASSIVE_SKILL_EXPERIENCE_CONVERGENCE
-		);
-		if (level <= 0.0)
-			return amount;
+        final double level = Loader.levelOfSuchPassiveSkill(
+                MyRuntime.getRuntimeUtils().gatherRelics(player),
+                Relic.PASSIVE_SKILL_EXPERIENCE_CONVERGENCE
+        );
+        if (level <= 0.0)
+            return amount;
 
-		final double multiplier = 1.0 + level * (experienceNeededForNextLevel / 7.0 - 1.0);
-		return (int) Math.min(Integer.MAX_VALUE, Math.max(amount, Math.round(amount * multiplier)));
-	}
+        final double multiplier = 1.0 + level * (experienceNeededForNextLevel / 7.0 - 1.0);
+        return (int) Math.min(Integer.MAX_VALUE, Math.max(amount, Math.round(amount * multiplier)));
+    }
 
-	public static void onLivingEntityTick(
-			MyLivingEntity myLivingEntity, final int currentTick, List<Relic> relics) {
+    public static void onLivingEntityTick(
+            MyLivingEntity myLivingEntity, final int currentTick, List<Relic> relics) {
 
-		MyUtils.requireValidEntity(myLivingEntity);
+        MyUtils.requireValidEntity(myLivingEntity);
 
-		spawnEnemyRelicParticles(myLivingEntity, relics, currentTick);
+        spawnEnemyRelicParticles(myLivingEntity, relics, currentTick);
 
-		final Map<String, Relic.Ticks.Info> ticks = Loader.computeTicks(relics, currentTick);
-		final double healingAuraLevel = Loader.levelOfSuchPassiveSkill(
-				relics, Relic.PASSIVE_SKILL_HEALING_AURA);
+        final Map<String, Relic.Ticks.Info> ticks = Loader.computeTicks(relics, currentTick);
+        final double healingAuraLevel = Loader.levelOfSuchPassiveSkill(
+                relics, Relic.PASSIVE_SKILL_HEALING_AURA);
 
-		for (final var entry : ticks.entrySet()) {
-			final Relic.Ticks.Info value = entry.getValue();
+        for (final var entry : ticks.entrySet()) {
+            final Relic.Ticks.Info value = entry.getValue();
 
-			switch (entry.getKey()) {
-				case "heal" -> {
-					myLivingEntity.heal((float) (
-							value.add + myLivingEntity.maxHealth() * value.ratio_add));
+            switch (entry.getKey()) {
+                case "heal" -> {
+                    myLivingEntity.heal((float) (
+                            value.add + myLivingEntity.maxHealth() * value.ratio_add));
 
-					if (healingAuraLevel > 0.0) {
+                    if (healingAuraLevel > 0.0) {
                         for (final MyLivingEntity target : myLivingEntity.livingEntitiesInRange(healingAuraLevel)) {
-							if (myLivingEntity.isAllied(target)) {
-								target.heal((float) (
-										value.add + target.maxHealth() * value.ratio_add));
-							}
-						}
-					}
-				}
-				case "feed" -> {
-					final float amount = (float) (
-							value.add + myLivingEntity.maxHealth() * value.ratio_add);
-					myLivingEntity.feed(Math.round(amount), 1.0F);
-				}
-			}
-		}
+                            if (myLivingEntity.isAllied(target)) {
+                                target.heal((float) (
+                                        value.add + target.maxHealth() * value.ratio_add));
+                            }
+                        }
+                    }
+                }
+                case "feed" -> {
+                    final float amount = (float) (
+                            value.add + myLivingEntity.maxHealth() * value.ratio_add);
+                    myLivingEntity.feed(Math.round(amount), 1.0F);
+                }
+            }
+        }
 
-		if (currentTick % 5 == 0) {
+        if (currentTick % 5 == 0) {
 
-			// Passive Skill: No-Fly Zone
-			final double noFlyZoneLevel = Loader.levelOfSuchPassiveSkill(
-					relics, Relic.PASSIVE_SKILL_NO_FLY_ZONE);
+            // Passive Skill: No-Fly Zone
+            final double noFlyZoneLevel = Loader.levelOfSuchPassiveSkill(
+                    relics, Relic.PASSIVE_SKILL_NO_FLY_ZONE);
 
-			if (noFlyZoneLevel > 0.0) {
-				final MyRuntimeUtils runtime = MyRuntime.getRuntimeUtils();
-				for (final MyLivingEntity target :
-						myLivingEntity.livingEntitiesInRange(noFlyZoneLevel)) {
-					if (!myLivingEntity.isHostile(target))
-						continue;
-					if (Scheduler.INSTANCE().isAutoMoveSuppressed(target.uuid(), currentTick))
-						continue;
+            if (noFlyZoneLevel > 0.0) {
+                final MyRuntimeUtils runtime = MyRuntime.getRuntimeUtils();
+                for (final MyLivingEntity target :
+                        myLivingEntity.livingEntitiesInRange(noFlyZoneLevel)) {
+                    if (!myLivingEntity.isHostile(target))
+                        continue;
+                    if (Scheduler.INSTANCE().isAutoMoveSuppressed(target.uuid(), currentTick))
+                        continue;
 
-					final var destination = runtime.groundDestination(target);
-					if (destination == null)
-						continue;
+                    final var destination = runtime.groundDestination(target);
+                    if (destination == null)
+                        continue;
 
-					// Only affect entities that are actually above a surface.
-					final double heightAboveGround = target.y() - destination.y();
+                    // Only affect entities that are actually above a surface.
+                    final double heightAboveGround = target.y() - destination.y();
 
-					if (!Double.isFinite(heightAboveGround) ||
-							heightAboveGround <= 2.0D) {
-						continue;
-					}
+                    if (!Double.isFinite(heightAboveGround) ||
+                            heightAboveGround <= 2.0D) {
+                        continue;
+                    }
 
-					// Apply a stronger pulse to entities farther from the ground.
-					final double pulse = Math.max(0.18D, 0.18D + heightAboveGround * 2.0D);
+                    // Apply a stronger pulse to entities farther from the ground.
+                    final double pulse = Math.max(0.18D, 0.18D + heightAboveGround * 2.0D);
 
-					target.push(0.0D, -pulse, 0.0D);
-					target.moveTo(destination.x(), destination.y(), destination.z());
-					target.markMovementChanged();
-				}
-			}
-		}
+                    target.push(0.0D, -pulse, 0.0D);
+                    target.moveTo(destination.x(), destination.y(), destination.z());
+                    target.markMovementChanged();
+                }
+            }
+        }
 
-		// Scheduled to update on each half seconds
-		if (currentTick % 10 == 0) {
-			// Effects
-			MyUtils.removeImmuneEffects(myLivingEntity, relics, MyLivingEntity.MyEffectCategory.ALL);
-			MyUtils.applyRelicEffects(myLivingEntity, relics);
+        // Scheduled to update on each half seconds
+        if (currentTick % 10 == 0) {
+            // Effects
+            MyUtils.removeImmuneEffects(myLivingEntity, relics, MyLivingEntity.MyEffectCategory.ALL);
+            MyUtils.applyRelicEffects(myLivingEntity, relics);
 
-			// Passive Skill: Reality Severance
-			final double reality_severance_level =
-					Loader.levelOfSuchPassiveSkill(relics, Relic.PASSIVE_SKILL_REALITY_SEVERANCE);
-			if (reality_severance_level > 0.0) {
-				final float ratioDamage = (float) (reality_severance_level / 100.0);
-				final float rangeDamage = ratioDamage * myLivingEntity.attackDamage();
+            // Passive Skill: Reality Severance
+            final double reality_severance_level =
+                    Loader.levelOfSuchPassiveSkill(relics, Relic.PASSIVE_SKILL_REALITY_SEVERANCE);
+            if (reality_severance_level > 0.0) {
+                final float ratioDamage = (float) (reality_severance_level / 100.0);
+                final float rangeDamage = ratioDamage * myLivingEntity.attackDamage();
 
-				MyExtraDamageInfo.directRangedAttack(
-						myLivingEntity, rangeDamage, Math.round((float) reality_severance_level), 1,
-						Math.round((float) (reality_severance_level / 4.0))
-				);
-			}
+                MyExtraDamageInfo.directRangedAttack(
+                        myLivingEntity, rangeDamage, Math.round((float) reality_severance_level), 1,
+                        Math.round((float) (reality_severance_level / 4.0))
+                );
+            }
 
-			// Passive Skill: Fire Resistance
-			final double fireResistanceLevel = Loader.levelOfSuchPassiveSkill(
-					relics, Relic.PASSIVE_SKILL_FIRE_RESISTANCE);
+            // Passive Skill: Fire Resistance
+            final double fireResistanceLevel = Loader.levelOfSuchPassiveSkill(
+                    relics, Relic.PASSIVE_SKILL_FIRE_RESISTANCE);
 
-			if (fireResistanceLevel > 0.0 && myLivingEntity.isOnFire()) {
-				myLivingEntity.clearFire();
-			}
+            if (fireResistanceLevel > 0.0 && myLivingEntity.isOnFire()) {
+                myLivingEntity.clearFire();
+            }
 
-			// Passive Skill: Grave Dominion
-			final double graveDominionLevel = Loader.levelOfSuchPassiveSkill(
-					relics, Relic.PASSIVE_SKILL_GRAVE_DOMINION);
+            // Passive Skill: Grave Dominion
+            final double graveDominionLevel = Loader.levelOfSuchPassiveSkill(
+                    relics, Relic.PASSIVE_SKILL_GRAVE_DOMINION);
 
-			if (graveDominionLevel > 0.0) {
-				for (final MyEntity entity : myLivingEntity.entitiesInRange(graveDominionLevel)) {
-					entity.moveTo(entity.x(), entity.y() - entity.height(), entity.z());
-				}
-			}
+            if (graveDominionLevel > 0.0) {
+                for (final MyEntity entity : myLivingEntity.entitiesInRange(graveDominionLevel)) {
+                    entity.moveTo(entity.x(), entity.y() - entity.height(), entity.z());
+                }
+            }
 
 
-			// Passive Skill: Suffocation Zone
-			final double suffocationZoneLevel = Loader.levelOfSuchPassiveSkill(
-					relics, Relic.PASSIVE_SKILL_SUFFOCATION_ZONE);
+            // Passive Skill: Suffocation Zone
+            final double suffocationZoneLevel = Loader.levelOfSuchPassiveSkill(
+                    relics, Relic.PASSIVE_SKILL_SUFFOCATION_ZONE);
 
-			if (suffocationZoneLevel > 0.0) {
-				final List<MyLivingEntity> all_nearby = myLivingEntity.livingEntitiesInRange(suffocationZoneLevel);
+            if (suffocationZoneLevel > 0.0) {
+                final List<MyLivingEntity> all_nearby = myLivingEntity.livingEntitiesInRange(suffocationZoneLevel);
 
-				for (final var nearby : all_nearby) {
-					MyLivingEntity itsTarget = nearby.getTarget();
-					if (itsTarget == null)
-						continue;
-					if (itsTarget.is(myLivingEntity)) {
-						nearby.resetTarget();
-						// MyRuntime.getRuntimeUtils().log("Tick clearing mob targets");
-					}
-				}
-			}
+                for (final var nearby : all_nearby) {
+                    MyLivingEntity itsTarget = nearby.getTarget();
+                    if (itsTarget == null)
+                        continue;
+                    if (itsTarget.is(myLivingEntity)) {
+                        nearby.resetTarget();
+                        // MyRuntime.getRuntimeUtils().log("Tick clearing mob targets");
+                    }
+                }
+            }
 
-		}
+        }
 
-		// Scheduled to update on each second
-		if (currentTick % 20 == 0) {
-			final double slowRange = Loader.levelOfSuchPassiveSkill(relics, Relic.PASSIVE_SKILL_SLOWING_AURA);
-			if (Double.isFinite(slowRange) && slowRange > 0) {
-				for (MyLivingEntity target : myLivingEntity.livingEntitiesInRange(slowRange)) {
-					double dx = target.x() - myLivingEntity.x(), dy = target.y() - myLivingEntity.y(), dz = target.z() - myLivingEntity.z();
-					if (myLivingEntity.isHostile(target) && dx * dx + dy * dy + dz * dz <= slowRange * slowRange)
-						target.addEffect(Manifest.EFFECT_SLOWNESS, 60, 2, false, true);
-				}
-			}
-			// Client HUD
-			if (myLivingEntity.isServerPlayer()) {
-				MySpellSystem.INSTANCE.syncSpellHud(myLivingEntity);
-			}
-		}
+        // Scheduled to update on each second
+        if (currentTick % 20 == 0) {
+            final double slowRange = Loader.levelOfSuchPassiveSkill(relics, Relic.PASSIVE_SKILL_SLOWING_AURA);
+            if (Double.isFinite(slowRange) && slowRange > 0) {
+                for (MyLivingEntity target : myLivingEntity.livingEntitiesInRange(slowRange)) {
+                    double dx = target.x() - myLivingEntity.x(), dy = target.y() - myLivingEntity.y(), dz = target.z() - myLivingEntity.z();
+                    if (myLivingEntity.isHostile(target) && dx * dx + dy * dy + dz * dz <= slowRange * slowRange)
+                        target.addEffect(Manifest.EFFECT_SLOWNESS, 60, 2, false, true);
+                }
+            }
+            // Client HUD
+            if (myLivingEntity.isServerPlayer()) {
+                MySpellSystem.INSTANCE.syncSpellHud(myLivingEntity);
+            }
+        }
 
-		// Scheduled to update on each 4 seconds
-		if (currentTick % 80 == 0) {
-			final double metalMendingLevel = Loader.levelOfSuchPassiveSkill(
-					relics, Relic.PASSIVE_SKILL_METAL_MENDING);
+        // Scheduled to update on each 4 seconds
+        if (currentTick % 80 == 0) {
+            final double metalMendingLevel = Loader.levelOfSuchPassiveSkill(
+                    relics, Relic.PASSIVE_SKILL_METAL_MENDING);
 
-			if (metalMendingLevel > 0.0) {
-				myLivingEntity.mendEquipment(Math.max(1, (int) Math.round(metalMendingLevel)));
-			}
-		}
-	}
+            if (metalMendingLevel > 0.0) {
+                myLivingEntity.mendEquipment(Math.max(1, (int) Math.round(metalMendingLevel)));
+            }
+        }
+    }
 
-	public static void spawnEnemyRelicParticles(
-			final MyLivingEntity entity, final List<Relic> relics, final int currentTick) {
+    private static final int ENEMY_RELIC_MOTE_COUNT = 3;
+    private static final float ENEMY_RELIC_MOTE_SIZE = 1.5F;
 
-		MyUtils.requireValidEntity(entity);
+    public static void spawnEnemyRelicParticles(
+            final MyLivingEntity entity, final List<Relic> relics, final int currentTick) {
 
-		final MyRuntimeUtils runtime = MyRuntime.getRuntimeUtils();
-		if (!runtime.hasEnemyRelics(entity) || relics.isEmpty() || currentTick % 2 != 0)
-			return;
+        MyUtils.requireValidEntity(entity);
 
-		double score = 0.0;
-		for (final Relic relic : relics) {
-			score += switch (relic.rarity) {
-				case "common" -> 0.10;
-				case "uncommon" -> 0.20;
-				case "rare" -> 0.40;
-				case "epic" -> 1.00;
-				default -> 0.15;
-			};
-		}
+        final MyRuntimeUtils runtime = MyRuntime.getRuntimeUtils();
+        if (!runtime.hasEnemyRelics(entity) || relics.isEmpty() || currentTick % 2 != 0)
+            return;
 
-		final int particleCount = 8;
-		final double radius = Math.max(0.6, entity.width() * 0.75);
-		final double y = entity.y() + entity.height() + 0.35;
-		final double rotation = currentTick * 0.12;
+        double score = 0.0;
+        for (final Relic relic : relics) {
+            score += switch (relic.rarity) {
+                case "common" -> 0.10;
+                case "uncommon" -> 0.20;
+                case "rare" -> 0.40;
+                case "epic" -> 1.00;
+                default -> 0.15;
+            };
+        }
+        final float intensity = (float) Math.max(0.0, Math.min(1.0, score));
 
-		for (int i = 0; i < particleCount; ++i) {
-			final double angle = rotation + Math.PI * 2.0 * i / particleCount;
-			final double x = entity.x() + Math.cos(angle) * radius;
-			final double z = entity.z() + Math.sin(angle) * radius;
-			final int color;
+        // Three heavy embers drifting around the enemy's head read better than
+        // a dense, fast ring of tiny sparks. The orbit is deliberately slow (a
+        // full turn every ~9 seconds) and wide, so the motes have room to be
+        // seen; a slight tilt, elliptical path and gentle bob keep it from
+        // feeling like a flat carousel. Each mote cools from a bright core to a
+        // dark ember over its lifetime, which gives the trail depth and makes
+        // the movement read as weighted rather than weightless.
+        final double radius = Math.max(1.0, Math.min(1.55, entity.width() * 0.9 + 0.35));
+        final double centerY = entity.y() + entity.height() * 0.9 + 0.2;
+        final double phase = currentTick * 0.045;
 
-			if (score >= 1.0) {
-				color = (i & 1) == 0
-						? rgb(0.45F, 0.01F, 0.01F)
-						: rgb(0.10F, 0.005F, 0.005F);
-			} else {
-				final float t = (float) Math.max(0.0, Math.min(1.0, score));
-				color = rgb(1.0F - 0.55F * t, 0.65F * (1.0F - t), 0.75F * (1.0F - t));
-			}
+        final int coreColor = rgb(
+                1.0F,
+                0.70F - 0.55F * intensity,
+                0.74F - 0.60F * intensity);
+        final int emberColor = rgb(
+                0.42F - 0.26F * intensity,
+                0.08F - 0.06F * intensity,
+                0.12F - 0.08F * intensity);
 
-			runtime.spawnDustParticle(entity, color, x, y, z);
-		}
-	}
+        for (int i = 0; i < ENEMY_RELIC_MOTE_COUNT; ++i) {
+            final double slot = Math.PI * 2.0 * i / ENEMY_RELIC_MOTE_COUNT;
 
-	private static int rgb(final float red, final float green, final float blue) {
-		final int r = Math.round(red * 255.0F);
-		final int g = Math.round(green * 255.0F);
-		final int b = Math.round(blue * 255.0F);
-		return r << 16 | g << 8 | b;
-	}
+            // Waxes and wanes each mote's angular speed while keeping the
+            // trio evenly spaced. The motion feels weighted, not robotic.
+            final double angle = phase + slot + 0.2 * Math.sin(phase + slot * 2.0);
+            final double x = entity.x() + Math.cos(angle) * radius;
+            final double z = entity.z() + Math.sin(angle) * radius * 0.92;
+            final double y = centerY
+                    + Math.sin(angle) * 0.10
+                    + Math.sin(currentTick * 0.032 + slot * 2.3) * 0.05;
 
-	public static float onLivingDamage(
-			final MyLivingEntity victim, final MyDamageSource source, float amount, final int currentTick) {
+            runtime.spawnDustTransitionParticle(
+                    entity, coreColor, emberColor, x, y, z, ENEMY_RELIC_MOTE_SIZE);
+        }
+    }
 
-		final MyLivingEntity attacker = source.attacker();
+    private static int rgb(final float red, final float green, final float blue) {
+        final int r = Math.round(red * 255.0F);
+        final int g = Math.round(green * 255.0F);
+        final int b = Math.round(blue * 255.0F);
+        return r << 16 | g << 8 | b;
+    }
+
+
+    	public static boolean onIncomingDamage(
+    			final MyLivingEntity victim, final MyDamageSource source, final int currentTick) {
+
+    		final MyLivingEntity attacker = source.attacker();
+
+    		// Environmental damage (fall, fire, drowning, ...) has no attacker.
+    		if (attacker == null)
+    			return false;
+
+    		/*
+    		Protection
+    		 */
+
+    		final List<Relic> victimRelics = MyRuntime.getRuntimeUtils().gatherRelics(victim);
+
+    		final double innocenceRange = Loader.levelOfSuchPassiveSkill(
+    				victimRelics,
+    				Relic.PASSIVE_SKILL_INNOCENCE
+    		);
+
+    		if (innocenceRange <= 0.0)
+    			return false;
+
+    		// distanceBetween throws when either entity is in an unloaded chunk.
+    		if (!victim.isLevelLoadedHere() || !attacker.isLevelLoadedHere())
+    			return false;
+
+    		return MyUtils.distanceBetween(victim, attacker) <= innocenceRange;
+    	}
+
+    public static float onLivingDamage(
+            final MyLivingEntity victim, final MyDamageSource source, float amount, final int currentTick) {
+
+        final MyLivingEntity attacker = source.attacker();
 
 		/*
 		Offensive Attack
 		 */
-		double lingeringWoundLevel = 0.0;
-		double cinderBrandLevel = 0.0;
+        double lingeringWoundLevel = 0.0;
+        double cinderBrandLevel = 0.0;
 
-		if (attacker != null) {
-			final List<Relic> attackerRelics = MyRuntime.getRuntimeUtils().gatherRelics(attacker);
-			lingeringWoundLevel = Loader.levelOfSuchPassiveSkill(
-					attackerRelics, Relic.PASSIVE_SKILL_LINGERING_WOUND);
-			cinderBrandLevel = Loader.levelOfSuchPassiveSkill(
-					attackerRelics, Relic.PASSIVE_SKILL_CINDER_BRAND);
+        if (attacker != null) {
+            final List<Relic> attackerRelics = MyRuntime.getRuntimeUtils().gatherRelics(attacker);
+            lingeringWoundLevel = Loader.levelOfSuchPassiveSkill(
+                    attackerRelics, Relic.PASSIVE_SKILL_LINGERING_WOUND);
+            cinderBrandLevel = Loader.levelOfSuchPassiveSkill(
+                    attackerRelics, Relic.PASSIVE_SKILL_CINDER_BRAND);
 
-			amount = (float) Loader.applyCallback(
-					attackerRelics, "damage_dealt", amount, victim.maxHealth());
+            amount = (float) Loader.applyCallback(
+                    attackerRelics, "damage_dealt", amount, victim.maxHealth());
 
-			victim.setInvulnerableTime(Math.round((float) Loader.applyCallback(
-					attackerRelics, "invulnerable_time_dealt", victim.invulnerableTime(), 10.0)));
+            victim.setInvulnerableTime(Math.round((float) Loader.applyCallback(
+                    attackerRelics, "invulnerable_time_dealt", victim.invulnerableTime(), 10.0)));
 
-			final double lifestealLevel = Loader.levelOfSuchPassiveSkill(
-					attackerRelics, Relic.PASSIVE_SKILL_LIFESTEAL);
+            final double lifestealLevel = Loader.levelOfSuchPassiveSkill(
+                    attackerRelics, Relic.PASSIVE_SKILL_LIFESTEAL);
 
-			if (lifestealLevel > 0.0 && amount > 0.0F)
-				attacker.heal((float) (amount * lifestealLevel));
-		}
+            if (lifestealLevel > 0.0 && amount > 0.0F)
+                attacker.heal((float) (amount * lifestealLevel));
+        }
 
 		/*
 		Protection
 		 */
 
-		final List<Relic> victimRelics = MyRuntime.getRuntimeUtils().gatherRelics(victim);
+        final List<Relic> victimRelics = MyRuntime.getRuntimeUtils().gatherRelics(victim);
 
-		amount = (float) Loader.applyCallback(
-				victimRelics, "damage_taken", amount, victim.maxHealth());
+        amount = (float) Loader.applyCallback(
+                victimRelics, "damage_taken", amount, victim.maxHealth());
 
-		final MyRuntimeUtils runtime = MyRuntime.getRuntimeUtils();
+        final MyRuntimeUtils runtime = MyRuntime.getRuntimeUtils();
 
-		// TODO
-		// I know this is not perfect. But, I guess, there should be nobody
-		// using more than 64, right?
-		// I will definitely fix it in the future anyway.
-		for (final MyLivingEntity damageReductionAuraBearer :
-				victim.livingEntitiesInRange(64.0)) {
+        // TODO
+        // I know this is not perfect. But, I guess, there should be nobody
+        // using more than 64, right?
+        // I will definitely fix it in the future anyway.
+        for (final MyLivingEntity damageReductionAuraBearer :
+                victim.livingEntitiesInRange(64.0)) {
 
-			if (damageReductionAuraBearer.is(victim))
-				continue;
+            if (damageReductionAuraBearer.is(victim))
+                continue;
 
-			if (!victim.isAllied(damageReductionAuraBearer))
-				continue;
+            if (!victim.isAllied(damageReductionAuraBearer))
+                continue;
 
-			final List<Relic> bearerRelics = runtime.gatherRelics(damageReductionAuraBearer);
+            final List<Relic> bearerRelics = runtime.gatherRelics(damageReductionAuraBearer);
 
-			final double damageReductionAuraRange = Loader.levelOfSuchPassiveSkill(
-					bearerRelics,
-					Relic.PASSIVE_SKILL_DAMAGE_REDUCTION_AURA
-			);
+            final double damageReductionAuraRange = Loader.levelOfSuchPassiveSkill(
+                    bearerRelics,
+                    Relic.PASSIVE_SKILL_DAMAGE_REDUCTION_AURA
+            );
 
-			// Whether he really has it
-			if (!Double.isFinite(damageReductionAuraRange) || damageReductionAuraRange <= 0.0)
-				continue;
+            // Whether he really has it
+            if (!Double.isFinite(damageReductionAuraRange) || damageReductionAuraRange <= 0.0)
+                continue;
 
-			if (MyUtils.distanceBetween(victim, damageReductionAuraBearer) > damageReductionAuraRange)
-				continue;
+            if (MyUtils.distanceBetween(victim, damageReductionAuraBearer) > damageReductionAuraRange)
+                continue;
 
-			amount = (float) Loader.applyCallback(
-					bearerRelics,
-					"damage_taken",
-					amount,
-					victim.maxHealth()
-			);
-		}
-		final int ironCurtainLevel = (int)Math.round(Loader.levelOfSuchPassiveSkill(
-				victimRelics, Relic.PASSIVE_SKILL_IRON_CURTAIN));
+            amount = (float) Loader.applyCallback(
+                    bearerRelics,
+                    "damage_taken",
+                    amount,
+                    victim.maxHealth()
+            );
+        }
+        final int ironCurtainLevel = (int) Math.round(Loader.levelOfSuchPassiveSkill(
+                victimRelics, Relic.PASSIVE_SKILL_IRON_CURTAIN));
 
-		if (ironCurtainLevel != 0.0) {
-			if (!Scheduler.INSTANCE().acquireProtection(victim.uuid(), currentTick, ironCurtainLevel)) {
-				amount = 0.0F;
-			}
-		}
+        if (ironCurtainLevel != 0.0) {
+            if (!Scheduler.INSTANCE().acquireProtection(victim.uuid(), currentTick, ironCurtainLevel)) {
+                amount = 0.0F;
+            }
+        }
 
 		/*
 		Footer
 		 */
 
-		// Passive Skill: CinderBrand
-		if (attacker != null && cinderBrandLevel > 0.0 && amount > 0.0F)
-			victim.igniteForSeconds(Math.max(1, (int) Math.round(cinderBrandLevel)));
+        // Passive Skill: CinderBrand
+        if (attacker != null && cinderBrandLevel > 0.0 && amount > 0.0F)
+            victim.igniteForSeconds(Math.max(1, (int) Math.round(cinderBrandLevel)));
 
-		// Passive Skill: Lingering Wound
-		if (attacker != null && lingeringWoundLevel > 0.0 && amount > 0.0F) {
-			if (!source.isExtraDamage()) {
-				accumulateLingeringWound(victim, amount, lingeringWoundLevel, currentTick);
-			}
+        // Passive Skill: Lingering Wound
+        if (attacker != null && lingeringWoundLevel > 0.0 && amount > 0.0F) {
+            if (!source.isExtraDamage()) {
+                accumulateLingeringWound(victim, amount, lingeringWoundLevel, currentTick);
+            }
 
-			Scheduler.INSTANCE().addDelayedTask(
-					victim.uuid(),
-					new Scheduler.DelayTask(
-							1, 1, () -> {
-						if (!victim.isLevelLoadedHere() || victim.isDeadOrDying())
-							return;
+            Scheduler.INSTANCE().addDelayedTask(
+                    victim.uuid(),
+                    new Scheduler.DelayTask(
+                            1, 1, () -> {
+                        if (!victim.isLevelLoadedHere() || victim.isDeadOrDying())
+                            return;
 
-						applyLingeringWound(attacker, victim);
-					}
-					),
-					currentTick
-			);
-		}
+                        applyLingeringWound(attacker, victim);
+                    }
+                    ),
+                    currentTick
+            );
+        }
 
-		// Passive Skill: Thorns
-		if (attacker != null && amount > 0.0F) {
-			final double thornsLevel = Loader.levelOfSuchPassiveSkill(
-					victimRelics, Relic.PASSIVE_SKILL_THORNS);
+        // Passive Skill: Thorns
+        if (attacker != null && amount > 0.0F) {
+            final double thornsLevel = Loader.levelOfSuchPassiveSkill(
+                    victimRelics, Relic.PASSIVE_SKILL_THORNS);
 
-			if (thornsLevel > 0.0 && Scheduler.INSTANCE().acquireThorns(
-					victim.uuid(), currentTick, 10)) {
+            if (thornsLevel > 0.0 && Scheduler.INSTANCE().acquireThorns(
+                    victim.uuid(), currentTick, 10)) {
 
-				final float thornsDamage = (float) (amount * thornsLevel);
+                final float thornsDamage = (float) (amount * thornsLevel);
 
-				Scheduler.INSTANCE().addDelayedTask(
-						attacker.uuid(),
-						new Scheduler.DelayTask(
-								1, 1, () -> {
-							if (!attacker.isLevelLoadedHere() || attacker.isDeadOrDying())
-								return;
+                Scheduler.INSTANCE().addDelayedTask(
+                        attacker.uuid(),
+                        new Scheduler.DelayTask(
+                                1, 1, () -> {
+                            if (!attacker.isLevelLoadedHere() || attacker.isDeadOrDying())
+                                return;
 
-							attacker.hurtThorns(victim, thornsDamage);
-						}
-						),
-						currentTick
-				);
-			}
-		}
+                            attacker.hurtThorns(victim, thornsDamage);
+                        }
+                        ),
+                        currentTick
+                );
+            }
+        }
 
-		return Math.max(0.0F, amount);
-	}
+        return Math.max(0.0F, amount);
+    }
 
 
     /**
-     * @param victim The living entity who receives damage
-     * @param source The damage source
+     * @param victim                The living entity who receives damage
+     * @param source                The damage source
      * @param called_from_pre_hooks Some versions do not support post-hooks
-	 *                              If this function has to be called from pre-hooks
-	 *                              When true, compatible rough methods will be applied
-     * @param currentTick The current server tick
+     *                              If this function has to be called from pre-hooks
+     *                              When true, compatible rough methods will be applied
+     * @param currentTick           The current server tick
      */
-	public static void onLivingDamagePost(
-			final MyLivingEntity victim,
-			final MyDamageSource source,
-			final boolean called_from_pre_hooks,
-			final int currentTick) {
+    public static void onLivingDamagePost(
+            final MyLivingEntity victim,
+            final MyDamageSource source,
+            final boolean called_from_pre_hooks,
+            final int currentTick) {
 
-		// final int victim.invulnerableTime();
+        // final int victim.invulnerableTime();
 
-		// NOTE
-		// There was a bug here, invulnerableTime should apply regardless of `iron_curtain`
-		// `iron_curtain` is dedicated for the case the damage bypass it, so this passive
-		// skill must be used very carefully as it's somehow hacking.
-		// WARNING
-		// This is not compatible with other mods, consider moving it into post-damage hooks.
+        // NOTE
+        // There was a bug here, invulnerableTime should apply regardless of `iron_curtain`
+        // `iron_curtain` is dedicated for the case the damage bypass it, so this passive
+        // skill must be used very carefully as it's somehow hacking.
+        // WARNING
+        // This is not compatible with other mods, consider moving it into post-damage hooks.
 
-		final List<Relic> victimRelics = MyRuntime.getRuntimeUtils().gatherRelics(victim);
-
-
-		final int invulnerableTime = Math.round((float) Loader.applyCallback(
-				victimRelics,
-				"invulnerable_time_taken",
-				called_from_pre_hooks ? 10 : victim.invulnerableTime(),
-				10)
-		);
-
-		if (
-				called_from_pre_hooks
-				? 10 != invulnerableTime
-				: victim.invulnerableTime() != invulnerableTime
-		) {
-
-			// If the invulnerableTime differs, apply it.
-			victim.setInvulnerableTime(invulnerableTime);
-
-			// Apply only when iron_curtain presents
-		}
-
-	}
-
-	/*
-	Lingering Wound
-	 */
-	public static void accumulateLingeringWound(
-			final MyLivingEntity target, final float amount, final double level, final int currentTick) {
-
-		MyUtils.requireValidEntity(target);
-
-		if (level <= 0.0)
-			return;
-
-		Scheduler.INSTANCE().addHealingPrevention(
-				target.uuid(), currentTick, (float) (amount * level));
-	}
-
-	public static void applyLingeringWound(
-			final MyLivingEntity attacker, final MyLivingEntity target) {
-
-		MyUtils.requireValidEntity(attacker);
-		MyUtils.requireValidEntity(target);
-
-		final float accumulatedDamage = Scheduler.INSTANCE().healingPrevention(target.uuid());
-		final float allowedHealth = target.maxHealth() - accumulatedDamage;
-
-		if (target.health() > allowedHealth) {
-			MyUtils.trueHurt(attacker, target, target.health() - allowedHealth);
-		}
-	}
-
-	public static void onArrowShot(
-			final MyAbstractArrow arrow, final MyLivingEntity owner,
-			final List<Relic> relics, final int currentTick) {
-
-		MyUtils.requireValidEntity(arrow);
-		// MyUtils.requireLoaded(owner);
-
-		final double speedLevel = Loader.levelOfSuchPassiveSkill(
-				relics, Relic.PASSIVE_SKILL_THRUSTING_ARROW);
-
-		if (speedLevel > 0.0) {
-			arrow.setVelocity(
-					arrow.velocityX() * speedLevel,
-					arrow.velocityY() * speedLevel,
-					arrow.velocityZ() * speedLevel);
-		}
-
-		final double empoweredLevel = Loader.levelOfSuchPassiveSkill(
-				relics, Relic.PASSIVE_SKILL_EMPOWERED_ARROW);
-		if (empoweredLevel > 0.0) {
-			arrow.setBaseDamage(arrow.baseDamage() * empoweredLevel);
-		}
-
-		final double gravitylessLevel = Loader.levelOfSuchPassiveSkill(
-				relics, Relic.PASSIVE_SKILL_GRAVITYLESS_ARROWS);
-		if (gravitylessLevel > 0.0) {
-
-			arrow.setNoGravity(true);
-
-			final int lifetimeTicks = (int) Math.min(
-					Integer.MAX_VALUE, Math.max(1.0, Math.ceil(gravitylessLevel * 20.0)));
-
-			Scheduler.INSTANCE().addDelayedTask(
-					arrow.uuid(),
-					new Scheduler.DelayTask(lifetimeTicks, lifetimeTicks, arrow::discard),
-					currentTick
-			);
-		}
-	}
-
-	public static boolean onArrowImpact(
-			final MyAbstractArrow arrow, final MyLivingEntity victim,
-			final List<Relic> relics, final int currentTick
-	) {
-		MyUtils.requireValidEntity(arrow);
-		MyUtils.requireValidEntity(victim);
-
-		final double retargetLevel = Loader.levelOfSuchPassiveSkill(
-				relics, Relic.PASSIVE_SKILL_RETARGET_ARROW);
-
-		if (retargetLevel > 0.0) {
-			arrow.retarget(victim, 1.0, 1.0, retargetLevel);
-			return true;
-		}
-
-		final double deflectionLevel = Loader.levelOfSuchPassiveSkill(
-				relics, Relic.PASSIVE_SKILL_ARROW_DEFLECTION);
-
-		if (deflectionLevel <= 0.0)
-			return false;
-
-		final int cooldownTicks = Math.max(1, (int) Math.round(100.0 / deflectionLevel));
-
-		if (!Scheduler.INSTANCE().acquireArrowDeflection(victim.uuid(), currentTick, cooldownTicks))
-			return false;
-
-		arrow.retarget(victim, deflectionLevel, deflectionLevel, 0.0);
-		return true;
-	}
+        final List<Relic> victimRelics = MyRuntime.getRuntimeUtils().gatherRelics(victim);
 
 
-	public static void onEntityTick(MyEntity entity) {
+        final int invulnerableTime = Math.round((float) Loader.applyCallback(
+                victimRelics,
+                "invulnerable_time_taken",
+                called_from_pre_hooks ? 10 : victim.invulnerableTime(),
+                10)
+        );
 
-	}
+        if (
+                called_from_pre_hooks
+                        ? 10 != invulnerableTime
+                        : victim.invulnerableTime() != invulnerableTime
+        ) {
 
-	/**
-	 * @param self who is changing target.
-	 * @param target new target.
-	 * @return Whether to cancel it.
-	 */
-	public static boolean onChangeTarget(
-			final MyLivingEntity self, final MyLivingEntity target) {
+            // If the invulnerableTime differs, apply it.
+            victim.setInvulnerableTime(invulnerableTime);
 
-		MyUtils.requireValidEntity(self);
-		MyUtils.requireValidEntity(target);
+            // Apply only when iron_curtain presents
+        }
 
-		// Passive Skill: Suffocation Zone
-		if (MyUtils.blockedBySuffocationZone(self, target)) {
-			self.resetTarget();
-			return true;
-		}
-		return false;
-	}
+    }
+
+    /*
+    Lingering Wound
+     */
+    public static void accumulateLingeringWound(
+            final MyLivingEntity target, final float amount, final double level, final int currentTick) {
+
+        MyUtils.requireValidEntity(target);
+
+        if (level <= 0.0)
+            return;
+
+        Scheduler.INSTANCE().addHealingPrevention(
+                target.uuid(), currentTick, (float) (amount * level));
+    }
+
+    public static void applyLingeringWound(
+            final MyLivingEntity attacker, final MyLivingEntity target) {
+
+        MyUtils.requireValidEntity(attacker);
+        MyUtils.requireValidEntity(target);
+
+        final float accumulatedDamage = Scheduler.INSTANCE().healingPrevention(target.uuid());
+        final float allowedHealth = target.maxHealth() - accumulatedDamage;
+
+        if (target.health() > allowedHealth) {
+            MyUtils.trueHurt(attacker, target, target.health() - allowedHealth);
+        }
+    }
+
+    public static void onArrowShot(
+            final MyAbstractArrow arrow, final MyLivingEntity owner,
+            final List<Relic> relics, final int currentTick) {
+
+        MyUtils.requireValidEntity(arrow);
+        // MyUtils.requireLoaded(owner);
+
+        final double speedLevel = Loader.levelOfSuchPassiveSkill(
+                relics, Relic.PASSIVE_SKILL_THRUSTING_ARROW);
+
+        if (speedLevel > 0.0) {
+            arrow.setVelocity(
+                    arrow.velocityX() * speedLevel,
+                    arrow.velocityY() * speedLevel,
+                    arrow.velocityZ() * speedLevel);
+        }
+
+        final double empoweredLevel = Loader.levelOfSuchPassiveSkill(
+                relics, Relic.PASSIVE_SKILL_EMPOWERED_ARROW);
+        if (empoweredLevel > 0.0) {
+            arrow.setBaseDamage(arrow.baseDamage() * empoweredLevel);
+        }
+
+        final double gravitylessLevel = Loader.levelOfSuchPassiveSkill(
+                relics, Relic.PASSIVE_SKILL_GRAVITYLESS_ARROWS);
+        if (gravitylessLevel > 0.0) {
+
+            arrow.setNoGravity(true);
+
+            final int lifetimeTicks = (int) Math.min(
+                    Integer.MAX_VALUE, Math.max(1.0, Math.ceil(gravitylessLevel * 20.0)));
+
+            Scheduler.INSTANCE().addDelayedTask(
+                    arrow.uuid(),
+                    new Scheduler.DelayTask(lifetimeTicks, lifetimeTicks, arrow::discard),
+                    currentTick
+            );
+        }
+    }
+
+    public static boolean onArrowImpact(
+            final MyAbstractArrow arrow, final MyLivingEntity victim,
+            final List<Relic> relics, final int currentTick
+    ) {
+        MyUtils.requireValidEntity(arrow);
+        MyUtils.requireValidEntity(victim);
+
+        final double retargetLevel = Loader.levelOfSuchPassiveSkill(
+                relics, Relic.PASSIVE_SKILL_RETARGET_ARROW);
+
+        if (retargetLevel > 0.0) {
+            arrow.retarget(victim, 1.0, 1.0, retargetLevel);
+            return true;
+        }
+
+        final double deflectionLevel = Loader.levelOfSuchPassiveSkill(
+                relics, Relic.PASSIVE_SKILL_ARROW_DEFLECTION);
+
+        if (deflectionLevel <= 0.0)
+            return false;
+
+        final int cooldownTicks = Math.max(1, (int) Math.round(100.0 / deflectionLevel));
+
+        if (!Scheduler.INSTANCE().acquireArrowDeflection(victim.uuid(), currentTick, cooldownTicks))
+            return false;
+
+        arrow.retarget(victim, deflectionLevel, deflectionLevel, 0.0);
+        return true;
+    }
+
+
+    public static void onEntityTick(MyEntity entity) {
+
+    }
+
+    /**
+     * @param self   who is changing target.
+     * @param target new target.
+     * @return Whether to cancel it.
+     */
+    public static boolean onChangeTarget(
+            final MyLivingEntity self, final MyLivingEntity target) {
+
+        MyUtils.requireValidEntity(self);
+        MyUtils.requireValidEntity(target);
+
+        // Passive Skill: Suffocation Zone
+        if (MyUtils.blockedBySuffocationZone(self, target)) {
+            self.resetTarget();
+            return true;
+        }
+        return false;
+    }
 
 	/*
 	Clean Up
 	 */
 
-	public static void onPlayerLoggedOut(final UUID uuid) {
-		Scheduler.INSTANCE().clearEntity(uuid);
-	}
+    public static void onPlayerLoggedOut(final UUID uuid) {
+        Scheduler.INSTANCE().clearEntity(uuid);
+    }
 
-	public static void onServerStopping() {
-		Scheduler.INSTANCE().clear();
-	}
+    public static void onServerStopping() {
+        Scheduler.INSTANCE().clear();
+    }
 }

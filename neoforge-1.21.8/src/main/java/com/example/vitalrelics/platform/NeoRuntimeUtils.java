@@ -172,14 +172,14 @@ public final class NeoRuntimeUtils implements MyRuntimeUtils {
 	}
 
 	@Override
-	public void spawnDustParticle(
-			final MyLivingEntity entity, final int color,
-			final double x, final double y, final double z) {
+	public void spawnDustTransitionParticle(
+			final MyLivingEntity entity, final int fromColor, final int toColor,
+			final double x, final double y, final double z, final float size) {
 		if (!(nativeEntity(entity).level() instanceof ServerLevel level))
 			return;
 
 		level.sendParticles(
-				new net.minecraft.core.particles.DustParticleOptions(color, 1.0F),
+				new net.minecraft.core.particles.DustColorTransitionOptions(fromColor, toColor, size),
 				x, y, z, 1, 0.0, 0.0, 0.0, 0.0
 		);
 	}

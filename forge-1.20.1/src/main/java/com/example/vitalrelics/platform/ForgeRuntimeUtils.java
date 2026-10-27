@@ -171,18 +171,22 @@ public final class ForgeRuntimeUtils implements MyRuntimeUtils {
 	}
 
 	@Override
-	public void spawnDustParticle(
-			final MyLivingEntity entity, final int color,
-			final double x, final double y, final double z) {
+	public void spawnDustTransitionParticle(
+			final MyLivingEntity entity, final int fromColor, final int toColor,
+			final double x, final double y, final double z, final float size) {
 		if (!(nativeEntity(entity).level() instanceof ServerLevel level))
 			return;
 
-		final float red = (color >> 16 & 0xFF) / 255.0F;
-		final float green = (color >> 8 & 0xFF) / 255.0F;
-		final float blue = (color & 0xFF) / 255.0F;
+		final float fromRed = (fromColor >> 16 & 0xFF) / 255.0F;
+		final float fromGreen = (fromColor >> 8 & 0xFF) / 255.0F;
+		final float fromBlue = (fromColor & 0xFF) / 255.0F;
+		final float toRed = (toColor >> 16 & 0xFF) / 255.0F;
+		final float toGreen = (toColor >> 8 & 0xFF) / 255.0F;
+		final float toBlue = (toColor & 0xFF) / 255.0F;
 		level.sendParticles(
-				new net.minecraft.core.particles.DustParticleOptions(
-						new org.joml.Vector3f(red, green, blue), 1.0F),
+				new net.minecraft.core.particles.DustColorTransitionOptions(
+						new org.joml.Vector3f(fromRed, fromGreen, fromBlue),
+						new org.joml.Vector3f(toRed, toGreen, toBlue), size),
 				x, y, z, 1, 0.0, 0.0, 0.0, 0.0
 		);
 	}

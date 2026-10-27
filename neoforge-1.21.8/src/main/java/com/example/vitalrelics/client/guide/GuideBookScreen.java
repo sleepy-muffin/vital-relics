@@ -67,6 +67,9 @@ public class GuideBookScreen extends Screen {
 			@Override public void text(String text, int x, int y, int argb) {
 				graphics.drawString(font, Component.literal(text), x, y, argb);
 			}
+			@Override public int textWidth(String text) {
+				return font.width(Component.literal(text));
+			}
 			@Override public List<String> wrap(String text, int width) {
 				return font.split(Component.literal(text), width).stream()
 						.map(line -> {

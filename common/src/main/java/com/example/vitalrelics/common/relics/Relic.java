@@ -158,7 +158,11 @@ public class Relic {
      */
 	public static final String PASSIVE_SKILL_AREA_MINING = "area_mining";
 	/**
-	 * Enemy cannot aim at you within level range.
+	 * Enemy cannot deal damage to you within level range.
+	 */
+	public static final String PASSIVE_SKILL_INNOCENCE = "innocence";
+	/**
+	 * Enemy cannot target at you within level range.
 	 */
 	public static final String PASSIVE_SKILL_SUFFOCATION_ZONE = "suffocation_zone";
 	/**

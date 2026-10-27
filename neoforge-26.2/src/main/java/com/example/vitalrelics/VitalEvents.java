@@ -4,6 +4,7 @@ import com.example.vitalrelics.common.*;
 import com.example.vitalrelics.platform.*;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.level.block.BreakBlockEvent;
 
 import com.example.vitalrelics.common.platform.MyDamageSource;
@@ -48,418 +49,407 @@ public final class VitalEvents {
             RelicMining.afterBreak(player, event.getPos(), event.getState(), event::isCanceled);
     }
 
-	@SubscribeEvent
-	public static void onExperienceGain(final PlayerXpEvent.XpChange event) {
-		final int amount = event.getAmount();
-		if (amount <= 0)
-			return;
-
-		event.setAmount(MyEvents.onExperienceGain(
-				new NeoLivingEntity(event.getEntity()), amount,
-				event.getEntity().getXpNeededForNextLevel()
-		));
-	}
-
-	/*
-	Properties
-	 */
-	private static Identifier makePropertyId(final String propertyName) {
-		return Identifier.fromNamespaceAndPath(Manifest.MODID, propertyName);
-	}
-
-	private record PropertyTarget(
-			Holder<Attribute> attribute,
-			Identifier addId,
-			Identifier mulBaseId,
-			Identifier mulTotalId) {
-
-		private static PropertyTarget of(
-				final String propertyName,
-				final Holder<Attribute> attribute) {
-			return new PropertyTarget(
-					attribute,
-					makePropertyId(propertyName + "_add"),
-					makePropertyId(propertyName + "_mul_base"),
-					makePropertyId(propertyName + "_mul_total")
-			);
-		}
-	}
-
-	private static Map.Entry<String, PropertyTarget> propertyTarget(
-			final String propertyName,
-			final Holder<Attribute> attribute) {
-		return Map.entry(propertyName, PropertyTarget.of(propertyName, attribute));
-	}
-
-	private static final Map<String, PropertyTarget> PROPERTY_TARGETS = Map.ofEntries(
-			propertyTarget("attack_damage", Attributes.ATTACK_DAMAGE),
-			propertyTarget("attack_speed", Attributes.ATTACK_SPEED),
-			propertyTarget("armor", Attributes.ARMOR),
-			propertyTarget("armor_toughness", Attributes.ARMOR_TOUGHNESS),
-			propertyTarget("knockback_resistance", Attributes.KNOCKBACK_RESISTANCE),
-			propertyTarget("max_health", Attributes.MAX_HEALTH),
-			propertyTarget("block_interaction_range", Attributes.BLOCK_INTERACTION_RANGE),
-			propertyTarget("entity_interaction_range", Attributes.ENTITY_INTERACTION_RANGE)
-	);
-
-	private VitalEvents() {}
-
-	@SubscribeEvent
-	public static void onServerTick(final ServerTickEvent.Post event) {
-
-		RelicMining.tick();
-		Scheduler.INSTANCE().serverTick(
-				event.getServer().getTickCount()
-		);
-	}
-
-
-	@SubscribeEvent
-	public static void onEntityTick(final EntityTickEvent.Post event) {
-		if (!(event.getEntity() instanceof LivingEntity livingEntity) || livingEntity.level().isClientSide()) {
-			return;
-		}
-
-		final MinecraftServer server = livingEntity.level().getServer();
-		if (server == null) {
-			return;
-		}
-
-		final var relics = gatherRelics(livingEntity);
-		final int currentTickCount = server.getTickCount();
-
-		final MyLivingEntity entity = new NeoLivingEntity(livingEntity);
-		MyEvents.onLivingEntityTick(entity, currentTickCount, relics);
-
-		// Scheduled to update on each second
-		if (currentTickCount % 20 == 0) {
-			// Properties
-
-			final Map<String, Relic.Properties.Info> properties =
-					Loader.computeProperties(relics);
-
-			for (final var entry : PROPERTY_TARGETS.entrySet()) {
-				final PropertyTarget target = entry.getValue();
-
-				final Relic.Properties.Info property =
-						properties.getOrDefault(
-								entry.getKey(),
-								Relic.Properties.Info.basic()
-						);
-
-				applyProperty(
-						livingEntity.getAttribute(target.attribute()),
-						property,
-						target.addId(),
-						target.mulBaseId(),
-						target.mulTotalId()
-				);
-			}
-
-			// Passive Skill: Flight
-
-			if (livingEntity instanceof ServerPlayer player) {
-				final double flightLevel = Loader.levelOfSuchPassiveSkill(
-						relics, Relic.PASSIVE_SKILL_FLIGHT
-				);
-
-				final Scheduler.FlightUpdate update =
-						Scheduler.INSTANCE().updateFlight(
-								player.getUUID(),
-								currentTickCount,
-								flightLevel,
-								player.getAbilities().mayfly
-						);
-
-				switch (update.action()) {
-					case GRANT -> {
-						player.getAbilities().mayfly = true;
-
-						if (Math.abs(update.level() - 1.0) > 1.0E-9) {
-							player.getAbilities().setFlyingSpeed(
-									(float) (0.05 * update.level())
-							);
-						}
-
-						player.onUpdateAbilities();
-					}
-
-					case UPDATE -> {
-						if (Math.abs(update.level() - 1.0) > 1.0E-9) {
-							player.getAbilities().setFlyingSpeed(
-									(float) (0.05 * update.level())
-							);
-						} else {
-							player.getAbilities().setFlyingSpeed(0.05F);
-						}
+    @SubscribeEvent
+    public static void onExperienceGain(final PlayerXpEvent.XpChange event) {
+        final int amount = event.getAmount();
+        if (amount <= 0)
+            return;
+
+        event.setAmount(MyEvents.onExperienceGain(
+                new NeoLivingEntity(event.getEntity()), amount,
+                event.getEntity().getXpNeededForNextLevel()));
+    }
+
+    /*
+     * Properties
+     */
+    private static Identifier makePropertyId(final String propertyName) {
+        return Identifier.fromNamespaceAndPath(Manifest.MODID, propertyName);
+    }
+
+    private record PropertyTarget(
+            Holder<Attribute> attribute,
+            Identifier addId,
+            Identifier mulBaseId,
+            Identifier mulTotalId) {
+
+        private static PropertyTarget of(
+                final String propertyName,
+                final Holder<Attribute> attribute) {
+            return new PropertyTarget(
+                    attribute,
+                    makePropertyId(propertyName + "_add"),
+                    makePropertyId(propertyName + "_mul_base"),
+                    makePropertyId(propertyName + "_mul_total"));
+        }
+    }
+
+    private static Map.Entry<String, PropertyTarget> propertyTarget(
+            final String propertyName,
+            final Holder<Attribute> attribute) {
+        return Map.entry(propertyName, PropertyTarget.of(propertyName, attribute));
+    }
+
+    private static final Map<String, PropertyTarget> PROPERTY_TARGETS = Map.ofEntries(
+            propertyTarget("attack_damage", Attributes.ATTACK_DAMAGE),
+            propertyTarget("attack_speed", Attributes.ATTACK_SPEED),
+            propertyTarget("armor", Attributes.ARMOR),
+            propertyTarget("armor_toughness", Attributes.ARMOR_TOUGHNESS),
+            propertyTarget("knockback_resistance", Attributes.KNOCKBACK_RESISTANCE),
+            propertyTarget("max_health", Attributes.MAX_HEALTH),
+            propertyTarget("block_interaction_range", Attributes.BLOCK_INTERACTION_RANGE),
+            propertyTarget("entity_interaction_range", Attributes.ENTITY_INTERACTION_RANGE));
+
+    private VitalEvents() {
+    }
+
+    @SubscribeEvent
+    public static void onServerTick(final ServerTickEvent.Post event) {
+
+        RelicMining.tick();
+        Scheduler.INSTANCE().serverTick(
+                event.getServer().getTickCount());
+    }
+
+    @SubscribeEvent
+    public static void onEntityTick(final EntityTickEvent.Post event) {
+        if (!(event.getEntity() instanceof LivingEntity livingEntity) || livingEntity.level().isClientSide()) {
+            return;
+        }
+
+        final MinecraftServer server = livingEntity.level().getServer();
+        if (server == null) {
+            return;
+        }
+
+        final var relics = gatherRelics(livingEntity);
+        final int currentTickCount = server.getTickCount();
+
+        final MyLivingEntity entity = new NeoLivingEntity(livingEntity);
+        MyEvents.onLivingEntityTick(entity, currentTickCount, relics);
+
+        // Scheduled to update on each second
+        if (currentTickCount % 20 == 0) {
+            // Properties
+
+            final Map<String, Relic.Properties.Info> properties = Loader.computeProperties(relics);
+
+            for (final var entry : PROPERTY_TARGETS.entrySet()) {
+                final PropertyTarget target = entry.getValue();
+
+                final Relic.Properties.Info property = properties.getOrDefault(
+                        entry.getKey(),
+                        Relic.Properties.Info.basic());
+
+                applyProperty(
+                        livingEntity.getAttribute(target.attribute()),
+                        property,
+                        target.addId(),
+                        target.mulBaseId(),
+                        target.mulTotalId());
+            }
+
+            // Passive Skill: Flight
+
+            if (livingEntity instanceof ServerPlayer player) {
+                final double flightLevel = Loader.levelOfSuchPassiveSkill(
+                        relics, Relic.PASSIVE_SKILL_FLIGHT);
+
+                final Scheduler.FlightUpdate update = Scheduler.INSTANCE().updateFlight(
+                        player.getUUID(),
+                        currentTickCount,
+                        flightLevel,
+                        player.getAbilities().mayfly);
+
+                switch (update.action()) {
+                    case GRANT -> {
+                        player.getAbilities().mayfly = true;
 
-						player.onUpdateAbilities();
-					}
+                        if (Math.abs(update.level() - 1.0) > 1.0E-9) {
+                            player.getAbilities().setFlyingSpeed(
+                                    (float) (0.05 * update.level()));
+                        }
 
-					case REMOVE -> {
-						if (!player.isCreative() && !player.isSpectator()) {
-							player.getAbilities().mayfly = false;
-							player.getAbilities().flying = false;
+                        player.onUpdateAbilities();
+                    }
+
+                    case UPDATE -> {
+                        if (Math.abs(update.level() - 1.0) > 1.0E-9) {
+                            player.getAbilities().setFlyingSpeed(
+                                    (float) (0.05 * update.level()));
+                        } else {
+                            player.getAbilities().setFlyingSpeed(0.05F);
+                        }
 
-							if (Math.abs(update.level() - 1.0) > 1.0E-9) {
-								player.getAbilities().setFlyingSpeed(0.05F);
-							}
+                        player.onUpdateAbilities();
+                    }
 
-							player.onUpdateAbilities();
-						}
-					}
+                    case REMOVE -> {
+                        if (!player.isCreative() && !player.isSpectator()) {
+                            player.getAbilities().mayfly = false;
+                            player.getAbilities().flying = false;
 
-					case NONE -> {}
-				}
-			}
+                            if (Math.abs(update.level() - 1.0) > 1.0E-9) {
+                                player.getAbilities().setFlyingSpeed(0.05F);
+                            }
 
-		}
+                            player.onUpdateAbilities();
+                        }
+                    }
 
-	}
+                    case NONE -> {
+                    }
+                }
+            }
 
-	private static void applyProperty(
-			final AttributeInstance attr,
-			final Relic.Properties.Info prop,
-			final Identifier addId,
-			final Identifier mulBaseId,
-			final Identifier mulTotalId) {
-
-		if (attr == null || prop == null)
-			return;
-
-		replaceModifier(attr, addId, prop.add, AttributeModifier.Operation.ADD_VALUE);
-		replaceModifier(attr, mulBaseId, prop.mul_base, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-		replaceModifier(attr, mulTotalId, prop.mul_total - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
-	}
-
-	private static void replaceModifier(
-			final AttributeInstance attr,
-			final Identifier id,
-			final double amount,
-			final AttributeModifier.Operation op) {
-
-		attr.removeModifier(id);
-
-		if (amount != 0.0)
-			attr.addTransientModifier(new AttributeModifier(id, amount, op));
-	}
-
-
-	@SubscribeEvent
-	public static void onLivingDamage(final LivingDamageEvent.Pre event) {
-		final LivingEntity victim = event.getEntity();
-
-		if (victim.level().isClientSide())
-			return;
-
-		final MinecraftServer server = victim.level().getServer();
-		if (server == null)
-			return;
-
-		final MyDamageSource myDamageSource =
-				new NeoDamageSource(event.getSource());
-
-		event.setNewDamage(MyEvents.onLivingDamage(
-				new NeoLivingEntity(victim), myDamageSource,
-				event.getNewDamage(), server.getTickCount()
-		));
-	}
-
-
-
-	@SubscribeEvent
-	public static void onLivingDamage(final LivingDamageEvent.Post event) {
-		final LivingEntity victim = event.getEntity();
-
-		if (victim.level().isClientSide())
-			return;
-
-		final MinecraftServer server = victim.level().getServer();
-		if (server == null)
-			return;
-
-		final MyDamageSource myDamageSource =
-				new NeoDamageSource(event.getSource());
-
-		MyEvents.onLivingDamagePost(
-				new NeoLivingEntity(victim), myDamageSource,
-				false, server.getTickCount()
-		);
-	}
-
-
-
-	@SubscribeEvent
-	public static void onEffectApplicable(final MobEffectEvent.Applicable event) {
-		LivingEntity livingEntity = event.getEntity();
-
-		if (livingEntity.level().isClientSide())
-			return;
-
-		final var relics = gatherRelics(livingEntity);
-		final var effect = event.getEffectInstance().getEffect().value();
-
-		final Identifier id =
-				BuiltInRegistries.MOB_EFFECT.getKey(effect);
-
-		if (id == null)
-			return;
-
-		final boolean negative = effect.getCategory() == MobEffectCategory.HARMFUL;
-
-		if (
-				Loader.isImmuneToEffect(relics, id.getPath(), negative)
-		) {
-			event.setResult(
-					MobEffectEvent.Applicable.Result.DO_NOT_APPLY
-			);
-		}
-	}
-
-	@SubscribeEvent
-	public static void onArrowImpact(final ProjectileImpactEvent event) {
-		if (!(event.getEntity() instanceof AbstractArrow arrow) ||
-				arrow.level().isClientSide() ||
-				!(event.getRayTraceResult() instanceof EntityHitResult hit) ||
-				!(hit.getEntity() instanceof LivingEntity victim))
-			return;
+        }
+
+    }
 
-		final MinecraftServer server = victim.level().getServer();
-		if (server == null)
-			return;
+    private static void applyProperty(
+            final AttributeInstance attr,
+            final Relic.Properties.Info prop,
+            final Identifier addId,
+            final Identifier mulBaseId,
+            final Identifier mulTotalId) {
+
+        if (attr == null || prop == null)
+            return;
+
+        replaceModifier(attr, addId, prop.add, AttributeModifier.Operation.ADD_VALUE);
+        replaceModifier(attr, mulBaseId, prop.mul_base, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        replaceModifier(attr, mulTotalId, prop.mul_total - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
+    }
+
+    private static void replaceModifier(
+            final AttributeInstance attr,
+            final Identifier id,
+            final double amount,
+            final AttributeModifier.Operation op) {
+
+        attr.removeModifier(id);
+
+        if (amount != 0.0)
+            attr.addTransientModifier(new AttributeModifier(id, amount, op));
+    }
+
+    @SubscribeEvent
+    public static void onLivingDamage(final LivingDamageEvent.Pre event) {
+        final LivingEntity victim = event.getEntity();
+
+        if (victim.level().isClientSide())
+            return;
+
+        final MinecraftServer server = victim.level().getServer();
+        if (server == null)
+            return;
+
+        final MyDamageSource myDamageSource = new NeoDamageSource(event.getSource());
+
+        event.setNewDamage(MyEvents.onLivingDamage(
+                new NeoLivingEntity(victim), myDamageSource,
+                event.getNewDamage(), server.getTickCount()));
+    }
+
+    @SubscribeEvent
+    public static void onLivingDamage(final LivingDamageEvent.Post event) {
+        final LivingEntity victim = event.getEntity();
+
+        if (victim.level().isClientSide())
+            return;
+
+        final MinecraftServer server = victim.level().getServer();
+        if (server == null)
+            return;
+
+        final MyDamageSource myDamageSource = new NeoDamageSource(event.getSource());
+
+        MyEvents.onLivingDamagePost(
+                new NeoLivingEntity(victim), myDamageSource,
+                false, server.getTickCount());
+    }
+
+    @SubscribeEvent
+    public static void onEffectApplicable(final MobEffectEvent.Applicable event) {
+        LivingEntity livingEntity = event.getEntity();
+
+        if (livingEntity.level().isClientSide())
+            return;
+
+        final var relics = gatherRelics(livingEntity);
+        final var effect = event.getEffectInstance().getEffect().value();
+
+        final Identifier id = BuiltInRegistries.MOB_EFFECT.getKey(effect);
+
+        if (id == null)
+            return;
+
+        final boolean negative = effect.getCategory() == MobEffectCategory.HARMFUL;
+
+        if (Loader.isImmuneToEffect(relics, id.getPath(), negative)) {
+            event.setResult(
+                    MobEffectEvent.Applicable.Result.DO_NOT_APPLY);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onArrowImpact(final ProjectileImpactEvent event) {
+        if (!(event.getEntity() instanceof AbstractArrow arrow) ||
+                arrow.level().isClientSide() ||
+                !(event.getRayTraceResult() instanceof EntityHitResult hit) ||
+                !(hit.getEntity() instanceof LivingEntity victim))
+            return;
 
-		if (MyEvents.onArrowImpact(
-				new NeoAbstractArrow(arrow),
-				new NeoLivingEntity(victim),
-				gatherRelics(victim),
-				server.getTickCount()))
-			event.setCanceled(true);
-	}
+        final MinecraftServer server = victim.level().getServer();
+        if (server == null)
+            return;
 
-	@SubscribeEvent
-	public static void onArrowShot(final EntityJoinLevelEvent event) {
-		if (!(event.getEntity() instanceof AbstractArrow arrow) ||
-				event.getLevel().isClientSide())
-			return;
+        if (MyEvents.onArrowImpact(
+                new NeoAbstractArrow(arrow),
+                new NeoLivingEntity(victim),
+                gatherRelics(victim),
+                server.getTickCount()))
+            event.setCanceled(true);
+    }
 
-		if (!(arrow.getOwner() instanceof LivingEntity owner))
-			return;
+    @SubscribeEvent
+    public static void onArrowShot(final EntityJoinLevelEvent event) {
+        if (!(event.getEntity() instanceof AbstractArrow arrow) ||
+                event.getLevel().isClientSide())
+            return;
 
-		final MinecraftServer server = owner.level().getServer();
-		if (server == null)
-			return;
+        if (!(arrow.getOwner() instanceof LivingEntity owner))
+            return;
 
-		MyEvents.onArrowShot(
-				new NeoAbstractArrow(arrow),
-				new NeoLivingEntity(owner),
-				gatherRelics(owner),
-				server.getTickCount());
-	}
+        final MinecraftServer server = owner.level().getServer();
+        if (server == null)
+            return;
 
-	@SubscribeEvent
-	public static void onEntityTick(final EntityTickEvent.Pre event) {
-		Entity entity = event.getEntity();
-		if (entity.level().isClientSide()) {
-			return;
-		}
+        MyEvents.onArrowShot(
+                new NeoAbstractArrow(arrow),
+                new NeoLivingEntity(owner),
+                gatherRelics(owner),
+                server.getTickCount());
+    }
 
-		MyEvents.onEntityTick(new NeoForgeEntity(entity));
-	}
+    @SubscribeEvent
+    public static void onEntityTick(final EntityTickEvent.Pre event) {
+        Entity entity = event.getEntity();
+        if (entity.level().isClientSide()) {
+            return;
+        }
 
+        MyEvents.onEntityTick(new NeoForgeEntity(entity));
+    }
 
-	@SubscribeEvent
-	public static void onEntityJoinLevel(final EntityJoinLevelEvent event) {
-		if (event.getLevel().isClientSide())
-			return;
+    @SubscribeEvent
+    public static void onEntityJoinLevel(final EntityJoinLevelEvent event) {
+        if (event.getLevel().isClientSide())
+            return;
 
-		if (!(event.getEntity() instanceof LivingEntity livingEntity))
-			return;
+        if (!(event.getEntity() instanceof LivingEntity livingEntity))
+            return;
 
-		if (enemyRelicsRolled(livingEntity))
-			return;
+        if (enemyRelicsRolled(livingEntity))
+            return;
 
-		/*
-		 * Mark before rolling.
-		 *
-		 * Even entities which receive no relics must be marked, otherwise
-		 * loading them again would give them another chance to roll.
-		 */
-		markEnemyRelicsRolled(livingEntity);
+        /*
+         * Mark before rolling.
+         *
+         * Even entities which receive no relics must be marked, otherwise
+         * loading them again would give them another chance to roll.
+         */
+        markEnemyRelicsRolled(livingEntity);
 
-		final Identifier entityId =
-				BuiltInRegistries.ENTITY_TYPE.getKey(livingEntity.getType());
+        final Identifier entityId = BuiltInRegistries.ENTITY_TYPE.getKey(livingEntity.getType());
 
-		if (entityId == null)
-			return;
+        if (entityId == null)
+            return;
 
-		final List<Relic> relics =
-				Loader.get().rollEnemyRelics(entityId.toString());
+        final List<Relic> relics = Loader.get().rollEnemyRelics(entityId.toString());
 
-		if (relics.isEmpty())
-			return;
+        if (relics.isEmpty())
+            return;
 
-		setEnemyRelics(livingEntity, relics);
-	}
+        setEnemyRelics(livingEntity, relics);
+    }
 
+    /*
+     * Give the player the guide-book for the first time.
+     */
 
-	/*
-	Give the player the guide-book for the first time.
-	 */
+    private static final String GUIDE_BOOK_GIVEN = Manifest.MODID + ":guide_book_given";
 
-	private static final String GUIDE_BOOK_GIVEN =
-			Manifest.MODID + ":guide_book_given";
+    @SubscribeEvent
+    public static void onPlayerLogin(final PlayerEvent.PlayerLoggedInEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player))
+            return;
 
-	@SubscribeEvent
-	public static void onPlayerLogin(final PlayerEvent.PlayerLoggedInEvent event) {
-		if (!(event.getEntity() instanceof ServerPlayer player))
-			return;
+        final var data = player.getPersistentData();
 
-		final var data = player.getPersistentData();
+        if (data.getBoolean(GUIDE_BOOK_GIVEN).orElse(false))
+            return;
 
-		if (data.getBoolean(GUIDE_BOOK_GIVEN).orElse(false))
-			return;
+        final var book = VitalRelics.GUIDE_BOOK.get().getDefaultInstance();
 
-		final var book = VitalRelics.GUIDE_BOOK.get().getDefaultInstance();
+        if (!player.getInventory().add(book))
+            player.drop(book, false);
 
-		if (!player.getInventory().add(book))
-			player.drop(book, false);
+        data.putBoolean(GUIDE_BOOK_GIVEN, true);
+    }
 
-		data.putBoolean(GUIDE_BOOK_GIVEN, true);
-	}
+    /*
+     * Clean Up
+     */
 
+    @SubscribeEvent
+    public static void onPlayerLoggedOut(
+            final PlayerEvent.PlayerLoggedOutEvent event) {
 
-	/*
-	Clean Up
-	 */
+        if (event.getEntity().level().isClientSide())
+            return;
 
-	@SubscribeEvent
-	public static void onPlayerLoggedOut(
-			final PlayerEvent.PlayerLoggedOutEvent event) {
+        MyEvents.onPlayerLoggedOut(
+                event.getEntity().getUUID());
+    }
 
-		if (event.getEntity().level().isClientSide())
-			return;
-
-		MyEvents.onPlayerLoggedOut(
-				event.getEntity().getUUID()
-		);
-	}
-
-	@SubscribeEvent
-	public static void onServerStopping(
-			final ServerStoppingEvent event) {
+    @SubscribeEvent
+    public static void onServerStopping(
+            final ServerStoppingEvent event) {
         RelicMining.clear();
 
-		MyEvents.onServerStopping();
-	}
+        MyEvents.onServerStopping();
+    }
 
-	@SubscribeEvent
-	public static void onChangeTarget(LivingChangeTargetEvent event) {
-		if (event.getEntity() instanceof LivingEntity self &&
-				event.getNewAboutToBeSetTarget() instanceof LivingEntity target) {
-			if (MyEvents.onChangeTarget(new NeoLivingEntity(self), new NeoLivingEntity(target))) {
-				event.setCanceled(true);
-				// event.setNewAboutToBeSetTarget(null);
-			}
-		}
-	}
+    @SubscribeEvent
+    public static void onChangeTarget(LivingChangeTargetEvent event) {
+        if (event.getEntity() instanceof LivingEntity self &&
+                event.getNewAboutToBeSetTarget() instanceof LivingEntity target) {
+            if (MyEvents.onChangeTarget(new NeoLivingEntity(self), new NeoLivingEntity(target))) {
+                event.setCanceled(true);
+                // event.setNewAboutToBeSetTarget(null);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onIncomingDamage(LivingIncomingDamageEvent event) {
+        final LivingEntity victim = event.getEntity();
+
+        if (victim.level().isClientSide())
+            return;
+
+        final MinecraftServer server = victim.level().getServer();
+        if (server == null)
+            return;
+
+        final MyDamageSource myDamageSource = new NeoDamageSource(event.getSource());
+
+        boolean decision = MyEvents.onIncomingDamage(
+                new NeoLivingEntity(victim), myDamageSource, server.getTickCount());
+
+        if (decision) {
+            event.setCanceled(true);
+        }
+    }
 }

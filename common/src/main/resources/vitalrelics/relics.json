@@ -796,6 +796,76 @@
       }
     },
     {
+      "id": "blossom_anklet",
+      "display_name": "Blossom Anklet",
+      "tooltip": "A petal-woven anklet that lends a light, springy step.",
+      "texture": "blossom_anklet.png",
+      "curio_slot": "feet",
+      "rarity": "uncommon",
+      "granted_effects": {
+        "jump_boost": 1
+      }
+    },
+    {
+      "id": "petalstep_anklet",
+      "display_name": "Petalstep Anklet",
+      "tooltip": "Each landing scatters petals, softening the fall.",
+      "texture": "petalstep_anklet.png",
+      "curio_slot": "feet",
+      "rarity": "rare",
+      "granted_effects": {
+        "jump_boost": 2
+      },
+      "immune_to_effects": [
+        "slowness"
+      ],
+      "properties": {
+        "knockback_resistance": {
+          "add": 0.5
+        }
+      },
+      "callbacks": {
+        "damage_taken": {
+          "modifier": 0.94
+        }
+      }
+    },
+    {
+      "id": "ripple_anklet",
+      "display_name": "Ripple Anklet",
+      "tooltip": "A slender anklet that hums with a gentle current.",
+      "texture": "ripple_anklet.png",
+      "curio_slot": "feet",
+      "rarity": "uncommon",
+      "granted_effects": {
+        "speed": 1
+      }
+    },
+    {
+      "id": "tidecaller_anklet",
+      "display_name": "Tidecaller Anklet",
+      "tooltip": "The tide quickens your stride and your strikes.",
+      "texture": "tidecaller_anklet.png",
+      "curio_slot": "feet",
+      "rarity": "rare",
+      "granted_effects": {
+        "speed": 2
+      },
+      "immune_to_effects": [
+        "slowness"
+      ],
+      "properties": {
+        "attack_speed": {
+          "mul_total": 1.08
+        }
+      },
+      "callbacks": {
+        "invulnerable_time_dealt": {
+          "modifier": 0.75
+        }
+      }
+    },
+    {
       "id": "celestial_aegis",
       "display_name": "Halo of the Celestial Aegis",
       "tooltip": "A sacred halo that shelters its wearer beneath a celestial ward.",
@@ -965,6 +1035,9 @@
       "texture": "cherry_anklet.png",
       "curio_slot": "feet",
       "rarity": "epic",
+      "passive_skills": {
+        "innocence": 4
+      },
       "granted_effects": {
         "jump_boost": 4
       },
@@ -1006,76 +1079,6 @@
       "callbacks": {
         "invulnerable_time_dealt": {
           "modifier": 0.5
-        }
-      }
-    },
-    {
-      "id": "blossom_anklet",
-      "display_name": "Blossom Anklet",
-      "tooltip": "A petal-woven anklet that lends a light, springy step.",
-      "texture": "blossom_anklet.png",
-      "curio_slot": "feet",
-      "rarity": "uncommon",
-      "granted_effects": {
-        "jump_boost": 1
-      }
-    },
-    {
-      "id": "petalstep_anklet",
-      "display_name": "Petalstep Anklet",
-      "tooltip": "Each landing scatters petals, softening the fall.",
-      "texture": "petalstep_anklet.png",
-      "curio_slot": "feet",
-      "rarity": "rare",
-      "granted_effects": {
-        "jump_boost": 2
-      },
-      "immune_to_effects": [
-        "slowness"
-      ],
-      "properties": {
-        "knockback_resistance": {
-          "add": 0.5
-        }
-      },
-      "callbacks": {
-        "damage_taken": {
-          "modifier": 0.94
-        }
-      }
-    },
-    {
-      "id": "ripple_anklet",
-      "display_name": "Ripple Anklet",
-      "tooltip": "A slender anklet that hums with a gentle current.",
-      "texture": "ripple_anklet.png",
-      "curio_slot": "feet",
-      "rarity": "uncommon",
-      "granted_effects": {
-        "speed": 1
-      }
-    },
-    {
-      "id": "tidecaller_anklet",
-      "display_name": "Tidecaller Anklet",
-      "tooltip": "The tide quickens your stride and your strikes.",
-      "texture": "tidecaller_anklet.png",
-      "curio_slot": "feet",
-      "rarity": "rare",
-      "granted_effects": {
-        "speed": 2
-      },
-      "immune_to_effects": [
-        "slowness"
-      ],
-      "properties": {
-        "attack_speed": {
-          "mul_total": 1.08
-        }
-      },
-      "callbacks": {
-        "invulnerable_time_dealt": {
-          "modifier": 0.75
         }
       }
     },

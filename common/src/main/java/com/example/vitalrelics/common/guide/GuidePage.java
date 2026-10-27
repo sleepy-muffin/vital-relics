@@ -5,9 +5,12 @@ import com.example.vitalrelics.common.relics.Acquisition;
 import com.example.vitalrelics.common.relics.Translations;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 public class GuidePage {
@@ -18,6 +21,7 @@ public class GuidePage {
 	public final String description;
 
 	public final List<Section> sections = new ArrayList<>();
+	public final List<Link> links = new ArrayList<>();
 
 	private GuidePage(
 			final String id, final String title, final String rarity,
@@ -73,6 +77,7 @@ public class GuidePage {
 		addCallbacks(page, relic);
 		addEnemySpawn(page, relic);
 		addAcquisition(page, entry, ingredientName);
+		addCrossReferences(page, relic);
 
 		return page;
 	}
@@ -560,6 +565,160 @@ public class GuidePage {
 			this.title = title;
 		}
 	}
+
+	public static class Link {
+		public final String text;
+		public final String targetId;
+
+		public Link(final String text, final String targetId) {
+			this.text = text;
+			this.targetId = targetId;
+		}
+	}
+
+	/**
+	 * Builds one reference page per passive skill, listing every relic that grants it
+	 * and the level provided by that relic.
+	 */
+	public static List<GuidePage> passiveSkills(final GuideBook book) {
+		if (book == null)
+			throw new IllegalArgumentException("book cannot be null");
+
+		final Map<String, List<PassiveProvider>> providers = new LinkedHashMap<>();
+
+		for (final GuideBook.Entry entry : book.entries()) {
+			if (entry.relic == null)
+				continue;
+
+			for (final var passive : entry.relic.passive_skills.entrySet()) {
+				providers.computeIfAbsent(passive.getKey(), key -> new ArrayList<>())
+						.add(new PassiveProvider(entry.relic, passive.getValue()));
+			}
+		}
+
+		final List<GuidePage> pages = new ArrayList<>();
+
+		for (final var entry : providers.entrySet()) {
+			final String id = entry.getKey();
+			final List<PassiveProvider> list = entry.getValue();
+
+			final GuidePage page = new GuidePage(
+					"passive:" + id,
+					translatedPassiveSkill(id),
+					"",
+					"passive",
+					tr("guide.vitalrelics.passive_skill." + id + ".description", "")
+			);
+
+			final Section grantedBy = new Section(
+					tr("guide.vitalrelics.section.granted_by", "Granted By")
+			);
+
+			for (final PassiveProvider provider : list) {
+				grantedBy.lines.add(trf(
+						"guide.vitalrelics.passive_provider", "%s — Level %s",
+						relicName(provider.relic),
+						format(provider.level)
+				));
+			}
+
+			page.sections.add(grantedBy);
+			pages.add(page);
+		}
+
+		return pages;
+	}
+
+	/**
+	 * Builds one reference page per spell, listing the relics that provide it and
+	 * every parameter the spell accepts.
+	 */
+	public static List<GuidePage> spells(final GuideBook book) {
+		if (book == null)
+			throw new IllegalArgumentException("book cannot be null");
+
+		final Map<String, List<SpellProvider>> providers = new LinkedHashMap<>();
+
+		for (final GuideBook.Entry entry : book.entries()) {
+			if (entry.relic == null)
+				continue;
+
+			for (final var spell : entry.relic.available_spells.entrySet()) {
+				providers.computeIfAbsent(spell.getKey(), key -> new ArrayList<>())
+						.add(new SpellProvider(entry.relic, spell.getValue()));
+			}
+		}
+
+		final List<GuidePage> pages = new ArrayList<>();
+
+		for (final var entry : providers.entrySet()) {
+			final String id = entry.getKey();
+			final List<SpellProvider> list = entry.getValue();
+
+			final GuidePage page = new GuidePage(
+					"spell:" + id,
+					translatedSpell(id),
+					"",
+					"spell",
+					tr("guide.vitalrelics.spell." + id + ".description", "")
+			);
+
+			final Section providedBy = new Section(
+					tr("guide.vitalrelics.section.provided_by", "Provided By")
+			);
+
+			for (final SpellProvider provider : list)
+				providedBy.lines.add(relicName(provider.relic));
+
+			page.sections.add(providedBy);
+
+			final Section parameters = new Section(
+					tr("guide.vitalrelics.section.parameters", "Parameters")
+			);
+
+			final Map<String, Set<String>> collected = new LinkedHashMap<>();
+
+			for (final SpellProvider provider : list) {
+				for (final var parameter : provider.info.parameters.entrySet()) {
+					collected.computeIfAbsent(
+							humanize(parameter.getKey()),
+							key -> new LinkedHashSet<>()
+					).add(formatObject(parameter.getValue()));
+				}
+			}
+
+			for (final var parameter : collected.entrySet()) {
+				parameters.lines.add(trf(
+						"guide.vitalrelics.parameter", "  %s: %s",
+						parameter.getKey(),
+						String.join(" / ", parameter.getValue())
+				));
+			}
+
+			if (!parameters.lines.isEmpty())
+				page.sections.add(parameters);
+
+			pages.add(page);
+		}
+
+		return pages;
+	}
+
+	private static void addCrossReferences(final GuidePage page, final Relic relic) {
+		for (final String id : relic.passive_skills.keySet())
+			page.links.add(new Link(translatedPassiveSkill(id), "passive:" + id));
+
+		for (final String id : relic.available_spells.keySet())
+			page.links.add(new Link(translatedSpell(id), "spell:" + id));
+	}
+
+	private static String relicName(final Relic relic) {
+		return tr("item.vitalrelics." + relic.id, displayName(relic));
+	}
+
+	private record PassiveProvider(Relic relic, double level) {}
+
+	private record SpellProvider(Relic relic, Relic.Spells.Info info) {}
 
 	public static GuidePage introduction() {
 		final GuidePage page = new GuidePage(

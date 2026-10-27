@@ -11,36 +11,66 @@ import java.util.function.Function;
 
 /** Platform-independent guide layout, rendering, search and input state. */
 public final class GuideBookView {
-	private static final int MARGIN = 16, LIST_WIDTH = 130, GAP = 8, HEADER_HEIGHT = 18;
+	private static final int MARGIN = 16, LIST_WIDTH = 130, GAP = 8;
+	private static final int TITLE_HEIGHT = 11;
+	private static final int TAB_HEIGHT = 14, TAB_GAP = 2, TAB_PAD = 7;
 	private static final int SEARCH_HEIGHT = 16, SEARCH_GAP = 4, ROW_HEIGHT = 16;
 	private static final int LINE_HEIGHT = 10, SCROLL_STEP = 24;
 	private static final int SCROLLBAR_WIDTH = 3, MIN_SCROLLBAR_HEIGHT = 12;
-	private final List<Page> pages = new ArrayList<>();
-	private final List<Page> visiblePages = new ArrayList<>();
-	private int width, height, selectedIndex, listScroll, contentScroll;
-	private int listContentHeight, pageContentHeight;
+
+	private static final int COLOR_TITLE = 0xFFFFFFFF;
+	private static final int COLOR_SUBTITLE = 0xFFAAAAAA;
+	private static final int COLOR_TEXT = 0xFFDDDDDD;
+	private static final int COLOR_LIST_TEXT = 0xFFCCCCCC;
+	private static final int COLOR_ACCENT = 0xFFE8C170;
+	private static final int COLOR_TAB_ACTIVE_TEXT = 0xFFFFF4D6;
+	private static final int COLOR_TAB_TEXT = 0xFFA8A8A8;
+
+	private final List<Tab> tabs = new ArrayList<>();
+	private final List<LinkHit> linkHits = new ArrayList<>();
+	private int[] tabLeft = new int[0];
+	private int[] tabWidth = new int[0];
+	private int width, height, selectedTab;
 
 	public GuideBookView(final GuideBook book, final String locale,
 			final Function<String, String> ingredientName,
 			final Function<String, String> effectName) {
 		if (book == null) throw new IllegalArgumentException("book cannot be null");
-		addPage(GuidePage.introduction());
+
+		final Tab gettingStarted = new Tab(
+				tr("guide.vitalrelics.tab.getting_started", "Getting Started"));
+		final Tab relics = new Tab(tr("guide.vitalrelics.tab.relics", "Relics"));
+		final Tab passives = new Tab(tr("guide.vitalrelics.tab.passives", "Passives"));
+		final Tab spells = new Tab(tr("guide.vitalrelics.tab.spells", "Spells"));
+
+		for (final GuideBook.Entry entry : book.entries())
+			relics.pages.add(new Page(GuidePage.from(entry, ingredientName, effectName)));
+
+		for (final GuidePage page : GuidePage.passiveSkills(book))
+			passives.pages.add(new Page(page));
+
+		for (final GuidePage page : GuidePage.spells(book))
+			spells.pages.add(new Page(page));
+
+		gettingStarted.pages.add(new Page(GuidePage.introduction()));
 		for (final String id : List.of("configure-curios", "configure-recipes", "configure-translations")) {
 			String markdown = readMarkdown(locale, id);
 			if (markdown == null && !"en_us".equals(locale)) markdown = readMarkdown("en_us", id);
-			if (markdown != null) addPage(MarkdownPage.parse(id, markdown));
+			if (markdown != null) gettingStarted.pages.add(new Page(MarkdownPage.parse(id, markdown)));
 		}
-		for (final GuideBook.Entry entry : book.entries())
-			addPage(GuidePage.from(entry, ingredientName, effectName));
-		visiblePages.addAll(pages);
+
+		tabs.add(gettingStarted);
+		tabs.add(relics);
+		tabs.add(passives);
+		tabs.add(spells);
+
+		for (final Tab tab : tabs)
+			tab.visible.addAll(tab.pages);
+
+		tabLeft = new int[tabs.size()];
+		tabWidth = new int[tabs.size()];
 	}
 
-	private void addPage(final GuidePage page) {
-		pages.add(new Page(page.id, page.title, page, null));
-	}
-	private void addPage(final MarkdownPage page) {
-		pages.add(new Page(page.id, page.title, null, page));
-	}
 	private static String readMarkdown(final String locale, final String id) {
 		final String path = "/vitalrelics/guide/" + locale + "/" + id + ".md";
 		try (InputStream stream = GuideBookView.class.getResourceAsStream(path)) {
@@ -49,19 +79,33 @@ public final class GuideBookView {
 			throw new RuntimeException("Failed to load guide page " + path, exception);
 		}
 	}
+
 	public void resize(final int width, final int height) {
 		this.width = width;
 		this.height = height;
-		clampListScroll();
-		clampContentScroll();
+		for (final Tab tab : tabs) {
+			clampListScroll(tab);
+			clampContentScroll(tab);
+		}
 	}
+
 	public int searchX() { return MARGIN; }
-	public int searchY() { return MARGIN + HEADER_HEIGHT; }
+	public int searchY() { return tabBottom() + 4; }
 	public int searchWidth() { return LIST_WIDTH; }
 	public int searchHeight() { return SEARCH_HEIGHT; }
+
 	public static String translate(final String key, final String fallback) {
 		return Translations.get().translate(key, fallback);
 	}
+
+	private int tabTop() {
+		return MARGIN + TITLE_HEIGHT;
+	}
+
+	private int tabBottom() {
+		return tabTop() + TAB_HEIGHT;
+	}
+
 	private int listLeft() {
 		return MARGIN;
 	}
@@ -75,11 +119,11 @@ public final class GuideBookView {
 	}
 
 	private int listTop() {
-		return MARGIN + HEADER_HEIGHT + SEARCH_HEIGHT + SEARCH_GAP;
+		return searchY() + SEARCH_HEIGHT + SEARCH_GAP;
 	}
 
 	private int contentTop() {
-		return MARGIN + HEADER_HEIGHT;
+		return tabBottom() + 4;
 	}
 
 	private int paneBottom() {
@@ -102,94 +146,220 @@ public final class GuideBookView {
 		return width - MARGIN - SCROLLBAR_WIDTH - 3;
 	}
 
-	private Page selectedPage() {
-		if (visiblePages.isEmpty())
+	private Tab currentTab() {
+		selectedTab = Math.max(0, Math.min(selectedTab, tabs.size() - 1));
+		return tabs.get(selectedTab);
+	}
+
+	private Page selectedPage(final Tab tab) {
+		if (tab.visible.isEmpty())
 			return null;
 
-		selectedIndex = Math.max(
+		tab.selectedIndex = Math.max(
 				0,
-				Math.min(selectedIndex, visiblePages.size() - 1)
+				Math.min(tab.selectedIndex, tab.visible.size() - 1)
 		);
 
-		return visiblePages.get(selectedIndex);
+		return tab.visible.get(tab.selectedIndex);
 	}
 
 	public void updateSearch(final String query) {
-		final Page previous = selectedPage();
-
 		final String normalized = query == null
 				? ""
 				: query.strip().toLowerCase(Locale.ROOT);
 
-		visiblePages.clear();
+		for (final Tab tab : tabs) {
+			final Page previous = tab.visible.isEmpty()
+					? null
+					: tab.visible.get(Math.max(0, Math.min(tab.selectedIndex, tab.visible.size() - 1)));
 
-		for (final Page page : pages) {
-			if (matchesSearch(page, normalized))
-				visiblePages.add(page);
+			tab.visible.clear();
+
+			for (final Page page : tab.pages) {
+				if (matchesSearch(page, normalized))
+					tab.visible.add(page);
+			}
+
+			tab.listScroll = 0;
+			tab.contentScroll = 0;
+
+			if (tab.visible.isEmpty()) {
+				tab.selectedIndex = 0;
+				continue;
+			}
+
+			final int previousIndex = tab.visible.indexOf(previous);
+			tab.selectedIndex = previousIndex >= 0 ? previousIndex : 0;
 		}
-
-		listScroll = 0;
-		contentScroll = 0;
-
-		if (visiblePages.isEmpty()) {
-			selectedIndex = 0;
-			return;
-		}
-
-		final int previousIndex = visiblePages.indexOf(previous);
-		selectedIndex = previousIndex >= 0 ? previousIndex : 0;
 	}
 
-	private static boolean matchesSearch(
-			final Page page,
-			final String query) {
-
+	private static boolean matchesSearch(final Page page, final String query) {
 		if (query.isEmpty())
 			return true;
 
-		return page.title.toLowerCase(Locale.ROOT).contains(query)
-				|| page.id.toLowerCase(Locale.ROOT).contains(query);
-	}
-	public void render(final GuideCanvas graphics) {
-		graphics.text(tr("guide.vitalrelics.title", "Vital Relics"), MARGIN, MARGIN, 0xFFFFFFFF);
-		renderPageList(graphics);
-		final Page page = selectedPage();
-		if (page == null) {
-			graphics.text(tr("guide.vitalrelics.empty", "No relics loaded."),
-					contentLeft(), contentTop(), 0xFFAAAAAA);
-		} else if (page.markdown != null) {
-			renderMarkdownPage(graphics, page.markdown);
-		} else {
-			renderGuidePage(graphics, page.guide);
+		if (contains(page.title, query) || contains(page.id, query))
+			return true;
+
+		if (page.guide != null) {
+			if (contains(page.guide.description, query))
+				return true;
+
+			for (final GuidePage.Section section : page.guide.sections) {
+				if (contains(section.title, query))
+					return true;
+
+				for (final String line : section.lines) {
+					if (contains(line, query))
+						return true;
+				}
+			}
 		}
-		renderScrollbars(graphics);
+
+		if (page.markdown != null) {
+			for (final MarkdownPage.Block block : page.markdown.blocks) {
+				if (block instanceof MarkdownPage.Heading heading && contains(heading.text(), query))
+					return true;
+				if (block instanceof MarkdownPage.Paragraph paragraph && contains(paragraph.text(), query))
+					return true;
+				if (block instanceof MarkdownPage.ListItem item && contains(item.text(), query))
+					return true;
+			}
+		}
+
+		return false;
 	}
 
-	private void renderPageList(final GuideCanvas graphics) {
+	private static boolean contains(final String value, final String query) {
+		return value != null && value.toLowerCase(Locale.ROOT).contains(query);
+	}
+
+	public void render(final GuideCanvas graphics) {
+		final Tab tab = currentTab();
+		linkHits.clear();
+
+		graphics.text(tr("guide.vitalrelics.title", "Vital Relics"), MARGIN, MARGIN, COLOR_TITLE);
+		renderTabs(graphics);
+
+		renderPanel(graphics, listLeft(), listTop(), listRight(), paneBottom());
+		renderPanel(graphics, contentLeft(), contentTop(), width - MARGIN, paneBottom());
+
+		renderPageList(graphics, tab);
+
+		final Page page = selectedPage(tab);
+
+		if (page == null) {
+			graphics.text(tr("guide.vitalrelics.empty", "Nothing to show here."),
+					contentLeft() + 4, contentTop() + 4, 0xFFAAAAAA);
+		} else if (page.markdown != null) {
+			renderMarkdownPage(graphics, tab, page.markdown);
+		} else {
+			renderGuidePage(graphics, tab, page.guide);
+		}
+
+		renderScrollbars(graphics, tab);
+	}
+
+	private void renderTabs(final GuideCanvas graphics) {
+		final int top = tabTop();
+		final int count = tabs.size();
+		final int available = Math.max(0,
+				(width - MARGIN * 2) - TAB_GAP * Math.max(0, count - 1));
+		final int maxWidth = count == 0 ? 0 : available / count;
+
+		int x = MARGIN;
+
+		for (int i = 0; i < count; ++i) {
+			final Tab tab = tabs.get(i);
+			final int desired = graphics.textWidth(tab.title) + TAB_PAD * 2;
+			int cellWidth = Math.max(0, Math.min(desired, maxWidth));
+
+			if (cellWidth <= 0) {
+				tabLeft[i] = x;
+				tabWidth[i] = 0;
+				continue;
+			}
+
+			final boolean active = i == selectedTab;
+
+			graphics.fill(x, top, x + cellWidth, top + TAB_HEIGHT,
+					active ? 0x55E8C170 : 0x22FFFFFF);
+
+			if (active) {
+				graphics.fill(x, top + TAB_HEIGHT - 2, x + cellWidth, top + TAB_HEIGHT, COLOR_ACCENT);
+			}
+
+			graphics.text(
+					fitText(graphics, tab.title, Math.max(0, cellWidth - TAB_PAD * 2)),
+					x + TAB_PAD,
+					top + 3,
+					active ? COLOR_TAB_ACTIVE_TEXT : COLOR_TAB_TEXT
+			);
+
+			tabLeft[i] = x;
+			tabWidth[i] = cellWidth;
+			x += cellWidth + TAB_GAP;
+		}
+
+		graphics.fill(MARGIN, tabBottom(), width - MARGIN, tabBottom() + 1, 0x30FFFFFF);
+	}
+
+	private static String fitText(final GuideCanvas graphics, final String text, final int maxWidth) {
+		if (maxWidth <= 0)
+			return "";
+		if (graphics.textWidth(text) <= maxWidth)
+			return text;
+
+		final String ellipsis = "...";
+		int end = text.length();
+
+		while (end > 0 && graphics.textWidth(text.substring(0, end)) + graphics.textWidth(ellipsis) > maxWidth)
+			--end;
+
+		return text.substring(0, end) + ellipsis;
+	}
+
+	private static void renderPanel(
+			final GuideCanvas graphics,
+			final int left, final int top,
+			final int right, final int bottom) {
+
+		if (right <= left || bottom <= top)
+			return;
+
+		graphics.fill(left, top, right, bottom, 0x24101010);
+		graphics.fill(left, top, right, top + 1, 0x30FFFFFF);
+		graphics.fill(left, top, left + 1, bottom, 0x30FFFFFF);
+		graphics.fill(left, bottom - 1, right, bottom, 0x40000000);
+		graphics.fill(right - 1, top, right, bottom, 0x40000000);
+	}
+
+	private void renderPageList(final GuideCanvas graphics, final Tab tab) {
 		final int left = listLeft();
 		final int right = listTextRight();
 		final int top = listTop();
 		final int bottom = paneBottom();
 
-		listContentHeight = visiblePages.size() * ROW_HEIGHT;
-		clampListScroll();
+		tab.listContentHeight = tab.visible.size() * ROW_HEIGHT;
+		clampListScroll(tab);
 
 		graphics.pushClip(left, top, right, bottom);
 
-		int y = top - listScroll;
+		int y = top - tab.listScroll;
 
-		for (int i = 0; i < visiblePages.size(); ++i) {
-			final Page page = visiblePages.get(i);
-			final boolean selected = i == selectedIndex;
+		for (int i = 0; i < tab.visible.size(); ++i) {
+			final Page page = tab.visible.get(i);
+			final boolean selected = i == tab.selectedIndex;
 
-			if (selected)
-				graphics.fill(left, y, right, y + ROW_HEIGHT - 1, 0x60404040);
+			if (selected) {
+				graphics.fill(left, y, right, y + ROW_HEIGHT - 1, 0x40FFFFFF);
+				graphics.fill(left, y, left + 2, y + ROW_HEIGHT - 1, COLOR_ACCENT);
+			}
 
 			if (y + ROW_HEIGHT >= top && y <= bottom) {
 				graphics.text(
 						page.title,
-						left + 3, y + 4,
-						selected ? 0xFFFFFFFF : 0xFFCCCCCC
+						left + 5, y + 4,
+						selected ? 0xFFFFFFFF : COLOR_LIST_TEXT
 				);
 			}
 
@@ -201,9 +371,10 @@ public final class GuideBookView {
 
 	private void renderGuidePage(
 			final GuideCanvas graphics,
+			final Tab tab,
 			final GuidePage page) {
 
-		final int left = contentLeft();
+		final int left = contentLeft() + 4;
 		final int right = contentTextRight();
 		final int top = contentTop();
 		final int bottom = paneBottom();
@@ -211,27 +382,28 @@ public final class GuideBookView {
 
 		graphics.pushClip(left, top, right, bottom);
 
-		int y = top - contentScroll;
+		int y = top - tab.contentScroll + 4;
 
-		y = drawLine(graphics, page.title, left, y, 0xFFFFFFFF);
+		y = drawLine(graphics, page.title, left, y, COLOR_TITLE);
 
-		if (!page.rarity.isBlank() || !page.slot.isBlank()) {
-			y = drawLine(
-					graphics,
-					trf(
-							"guide.vitalrelics.rarity_slot", "%s · %s",
-							tr(
-									"guide.vitalrelics.rarity." + page.rarity,
-									humanize(page.rarity)
-							),
-							tr(
-									"guide.vitalrelics.slot." + page.slot,
-									humanize(page.slot)
-							)
-					),
-					left, y, 0xFFAAAAAA
-			);
+		final List<String> subtitle = new ArrayList<>();
+
+		if (!page.rarity.isBlank()) {
+			subtitle.add(tr(
+					"guide.vitalrelics.rarity." + page.rarity,
+					humanize(page.rarity)
+			));
 		}
+
+		if (!page.slot.isBlank()) {
+			subtitle.add(tr(
+					"guide.vitalrelics.slot." + page.slot,
+					humanize(page.slot)
+			));
+		}
+
+		if (!subtitle.isEmpty())
+			y = drawLine(graphics, String.join(" · ", subtitle), left, y, COLOR_SUBTITLE);
 
 		y += 3;
 
@@ -239,13 +411,13 @@ public final class GuideBookView {
 				graphics,
 				page.description,
 				left, y, textWidth,
-				0xFFDDDDDD
+				COLOR_TEXT
 		);
 
 		y += 5;
 
 		for (final GuidePage.Section section : page.sections) {
-			y = drawLine(graphics, section.title, left, y, 0xFFFFFFFF);
+			y = drawLine(graphics, section.title, left, y, COLOR_TITLE);
 
 			for (final String line : section.lines) {
 				y = drawWrapped(
@@ -253,8 +425,40 @@ public final class GuideBookView {
 						line,
 						left + 5, y,
 						Math.max(40, textWidth - 5),
-						0xFFCCCCCC
+						COLOR_LIST_TEXT
 				);
+			}
+
+			y += 4;
+		}
+
+		if (!page.links.isEmpty()) {
+			y = drawLine(
+					graphics,
+					tr("guide.vitalrelics.section.see_also", "See Also"),
+					left, y, COLOR_TITLE
+			);
+
+			for (final GuidePage.Link link : page.links) {
+				final String label = "▸ " + link.text;
+				final int linkLeft = left + 5;
+				final int linkWidth = graphics.textWidth(label);
+
+				if (y + LINE_HEIGHT >= top && y + LINE_HEIGHT <= bottom) {
+					graphics.text(label, linkLeft, y, COLOR_ACCENT);
+					graphics.fill(
+							linkLeft, y + LINE_HEIGHT - 1,
+							linkLeft + linkWidth, y + LINE_HEIGHT,
+							0x80E8C170
+					);
+					linkHits.add(new LinkHit(
+							linkLeft, y,
+							linkLeft + linkWidth, y + LINE_HEIGHT,
+							link.targetId
+					));
+				}
+
+				y += LINE_HEIGHT;
 			}
 
 			y += 4;
@@ -262,15 +466,16 @@ public final class GuideBookView {
 
 		graphics.popClip();
 
-		pageContentHeight = y - (top - contentScroll);
-		clampContentScroll();
+		tab.pageContentHeight = y - (top - tab.contentScroll) + 4;
+		clampContentScroll(tab);
 	}
 
 	private void renderMarkdownPage(
 			final GuideCanvas graphics,
+			final Tab tab,
 			final MarkdownPage page) {
 
-		final int left = contentLeft();
+		final int left = contentLeft() + 4;
 		final int right = contentTextRight();
 		final int top = contentTop();
 		final int bottom = paneBottom();
@@ -278,9 +483,9 @@ public final class GuideBookView {
 
 		graphics.pushClip(left, top, right, bottom);
 
-		int y = top - contentScroll;
+		int y = top - tab.contentScroll + 4;
 
-		y = drawLine(graphics, page.title, left, y, 0xFFFFFFFF);
+		y = drawLine(graphics, page.title, left, y, COLOR_TITLE);
 		y += 4;
 
 		for (final MarkdownPage.Block block : page.blocks) {
@@ -291,7 +496,7 @@ public final class GuideBookView {
 						heading.text(),
 						left + Math.min(8, Math.max(0, heading.level() - 2) * 3),
 						y,
-						heading.level() <= 2 ? 0xFFFFFFFF : 0xFFE0E0E0
+						heading.level() <= 2 ? COLOR_TITLE : 0xFFE0E0E0
 				);
 				y += 2;
 				continue;
@@ -303,7 +508,7 @@ public final class GuideBookView {
 						paragraph.text(),
 						left, y,
 						textWidth,
-						0xFFDDDDDD
+						COLOR_TEXT
 				);
 				y += 4;
 				continue;
@@ -320,7 +525,7 @@ public final class GuideBookView {
 						marker + item.text(),
 						left + 5 + indent, y,
 						Math.max(40, textWidth - 5 - indent),
-						0xFFCCCCCC
+						COLOR_LIST_TEXT
 				);
 				continue;
 			}
@@ -374,15 +579,15 @@ public final class GuideBookView {
 						String.join("  |  ", table.cells()),
 						left + 4, y,
 						Math.max(40, textWidth - 8),
-						0xFFCCCCCC
+						COLOR_LIST_TEXT
 				);
 			}
 		}
 
 		graphics.popClip();
 
-		pageContentHeight = y - (top - contentScroll);
-		clampContentScroll();
+		tab.pageContentHeight = y - (top - tab.contentScroll) + 4;
+		clampContentScroll(tab);
 	}
 
 	private int drawLine(
@@ -414,19 +619,19 @@ public final class GuideBookView {
 		return currentY;
 	}
 
-	private void renderScrollbars(final GuideCanvas graphics) {
+	private void renderScrollbars(final GuideCanvas graphics, final Tab tab) {
 		renderScrollbar(
 				graphics,
 				listRight() - SCROLLBAR_WIDTH,
 				listTop(), listHeight(),
-				listScroll, listContentHeight
+				tab.listScroll, tab.listContentHeight
 		);
 
 		renderScrollbar(
 				graphics,
 				width - MARGIN - SCROLLBAR_WIDTH,
 				contentTop(), contentHeight(),
-				contentScroll, pageContentHeight
+				tab.contentScroll, tab.pageContentHeight
 		);
 	}
 
@@ -466,17 +671,40 @@ public final class GuideBookView {
 	public boolean mouseClicked(
 			final double mouseX, final double mouseY, final int button) {
 
-		if (button == 0 && inside(
+		if (button != 0)
+			return false;
+
+		for (int i = 0; i < tabs.size(); ++i) {
+			if (inside(
+					mouseX, mouseY,
+					tabLeft[i], tabTop(),
+					tabLeft[i] + tabWidth[i], tabBottom()
+			)) {
+				selectedTab = i;
+				return true;
+			}
+		}
+
+		for (final LinkHit hit : linkHits) {
+			if (inside(mouseX, mouseY, hit.left, hit.top, hit.right, hit.bottom)
+					&& openPage(hit.targetId)) {
+				return true;
+			}
+		}
+
+		final Tab tab = currentTab();
+
+		if (inside(
 				mouseX, mouseY,
 				listLeft(), listTop(),
 				listTextRight(), paneBottom()
 		)) {
 			final int index =
-					((int) mouseY - listTop() + listScroll) / ROW_HEIGHT;
+					((int) mouseY - listTop() + tab.listScroll) / ROW_HEIGHT;
 
-			if (index >= 0 && index < visiblePages.size()) {
-				selectedIndex = index;
-				contentScroll = 0;
+			if (index >= 0 && index < tab.visible.size()) {
+				tab.selectedIndex = index;
+				tab.contentScroll = 0;
 				return true;
 			}
 		}
@@ -487,13 +715,15 @@ public final class GuideBookView {
 	public boolean mouseScrolled(
 			final double mouseX, final double mouseY, final double scrollY) {
 
+		final Tab tab = currentTab();
+
 		if (inside(
 				mouseX, mouseY,
 				listLeft(), listTop(),
 				listRight(), paneBottom()
 		)) {
-			listScroll -= (int) Math.round(scrollY * SCROLL_STEP);
-			clampListScroll();
+			tab.listScroll -= (int) Math.round(scrollY * SCROLL_STEP);
+			clampListScroll(tab);
 			return true;
 		}
 
@@ -502,22 +732,41 @@ public final class GuideBookView {
 				contentLeft(), contentTop(),
 				width - MARGIN, paneBottom()
 		)) {
-			contentScroll -= (int) Math.round(scrollY * SCROLL_STEP);
-			clampContentScroll();
+			tab.contentScroll -= (int) Math.round(scrollY * SCROLL_STEP);
+			clampContentScroll(tab);
 			return true;
 		}
 
 		return false;
 	}
 
-	private void clampListScroll() {
-		listScroll = clampScroll(listScroll, listContentHeight, listHeight());
+	private boolean openPage(final String id) {
+		for (int index = 0; index < tabs.size(); ++index) {
+			final Tab tab = tabs.get(index);
+
+			for (int page = 0; page < tab.visible.size(); ++page) {
+				if (!tab.visible.get(page).id.equals(id))
+					continue;
+
+				selectedTab = index;
+				tab.selectedIndex = page;
+				tab.listScroll = 0;
+				tab.contentScroll = 0;
+				return true;
+			}
+		}
+
+		return false;
 	}
 
-	private void clampContentScroll() {
-		contentScroll = clampScroll(
-				contentScroll,
-				pageContentHeight,
+	private void clampListScroll(final Tab tab) {
+		tab.listScroll = clampScroll(tab.listScroll, tab.listContentHeight, listHeight());
+	}
+
+	private void clampContentScroll(final Tab tab) {
+		tab.contentScroll = clampScroll(
+				tab.contentScroll,
+				tab.pageContentHeight,
 				contentHeight()
 		);
 	}
@@ -540,13 +789,6 @@ public final class GuideBookView {
 
 	private static String tr(final String key, final String fallback) {
 		return Translations.get().translate(key, fallback);
-	}
-
-	private static String trf(
-			final String key, final String fallback,
-			final Object... arguments) {
-
-		return String.format(Locale.ROOT, tr(key, fallback), arguments);
 	}
 
 	private static String humanize(final String value) {
@@ -573,12 +815,52 @@ public final class GuideBookView {
 		return result.toString();
 	}
 
+	private static final class LinkHit {
+		final int left, top, right, bottom;
+		final String targetId;
+
+		LinkHit(
+				final int left, final int top,
+				final int right, final int bottom,
+				final String targetId) {
+
+			this.left = left;
+			this.top = top;
+			this.right = right;
+			this.bottom = bottom;
+			this.targetId = targetId;
+		}
+	}
+
+	private static final class Tab {
+		final String title;
+		final List<Page> pages = new ArrayList<>();
+		final List<Page> visible = new ArrayList<>();
+		int selectedIndex, listScroll, contentScroll;
+		int listContentHeight, pageContentHeight;
+
+		Tab(final String title) {
+			this.title = title;
+		}
+	}
+
 	private static final class Page {
 		final String id, title;
 		final GuidePage guide;
 		final MarkdownPage markdown;
-		Page(String id, String title, GuidePage guide, MarkdownPage markdown) {
-			this.id = id; this.title = title; this.guide = guide; this.markdown = markdown;
+
+		Page(final GuidePage guide) {
+			this.id = guide.id;
+			this.title = guide.title;
+			this.guide = guide;
+			this.markdown = null;
+		}
+
+		Page(final MarkdownPage markdown) {
+			this.id = markdown.id;
+			this.title = markdown.title;
+			this.guide = null;
+			this.markdown = markdown;
 		}
 	}
 }

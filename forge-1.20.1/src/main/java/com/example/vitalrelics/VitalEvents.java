@@ -477,4 +477,26 @@ public final class VitalEvents {
 			}
 		}
 	}
+
+
+	@SubscribeEvent
+    public static void onLivingAttack(LivingAttackEvent event) {
+      final LivingEntity victim = event.getEntity();
+
+      if (victim.level().isClientSide())
+        return;
+
+      final MinecraftServer server = victim.level().getServer();
+      if (server == null)
+        return;
+
+      final MyDamageSource myDamageSource = new ForgeDamageSource(event.getSource());
+
+      boolean decision = MyEvents.onIncomingDamage(
+          new ForgeLivingEntity(victim), myDamageSource, server.getTickCount());
+
+	  if (decision) {
+		  event.setCanceled(true);
+	  }
+    }
 }
